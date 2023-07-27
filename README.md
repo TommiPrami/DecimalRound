@@ -1,12 +1,13 @@
 # DecimalRound
 
-Based on original code of John Herbsted (DecimalRounding_JH1.pas). Refactored it formatted code to be more standard and did some minor modifications. Biggest change is to change default rounding mode to the one, at least I, wwas thought at school. If need to replace delhi round -method, you need to specify the rounding mode in  DecicalRoundEx().
+Original code credit: John Herbster (DecimalRounding_JH1.pas).
 
-DRUnit.Round for simple version, and if yoiu need more control use DRUnit.RoundEx unit.
+The code has been refactored and formatted to adhere to more standard conventions, with some minor modifications. The most significant change is the adjustment of the default rounding mode to one commonly taught in schools. If you wish to replace the Delphi round method, you can specify the rounding mode in DecicalRoundEx().
 
-I've been using these original routines, and own versions of these in my own projects and also in used in my current and previous work.
+For a simple version, use DRUnit.Round. If you need more control, you can utilize the DRUnit.RoundEx unit.
 
-So far have not found anything to complain about. Sure there are limits if pushed hard enough, due the nature of floating point numbers. Other rounding methods I've seen and used, have failed tough. Usually pretty fast there has been number those have failed to round expectedly.
+I have been using these original routines, as well as my own versions, in various projects, both current and previous work. So far, I have not encountered any issues to complain about. However, it's important to note that there are limits when dealing with floating-point numbers, which can lead to unexpected results if pushed to extremes. Despite that, other rounding methods I've encountered and used have failed in various scenarios. In contrast, these routines have proven to be more reliable IMHO.
 
 ## TODO:
+
  
