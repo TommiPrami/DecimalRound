@@ -4,6 +4,8 @@
 >
 > Modifying the code gives on latest Delphi 11 following error: [dcc32 Fatal Error] F2084 Internal Error: L902
 > If/when this happens insted of compiling you need to build the code. Could not find reason for this.
+>
+> Ticket : https://quality.embarcadero.com/browse/RSP-42048
 
 ### Routines for rounding IEEE-754 floats to specified number of decimal fractions
 
