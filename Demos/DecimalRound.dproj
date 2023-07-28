@@ -129,7 +129,6 @@
             <Form>DRMainForm</Form>
         </DCCReference>
         <DCCReference Include="..\Source\DRUnit.Consts.pas"/>
-        <DCCReference Include="..\Source\DRUnit.Help.pas"/>
         <DCCReference Include="..\Source\DRUnit.Round.pas"/>
         <DCCReference Include="..\Source\DRUnit.RoundEx.pas"/>
         <DCCReference Include="..\Source\DRUnit.Types.pas"/>
@@ -166,7 +165,7 @@
                 <Platform value="Win64">True</Platform>
             </Platforms>
             <Deployment Version="4">
-                <DeployFile LocalName="DecimalRound.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Win32\Debug\DecimalRound.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>DecimalRound.exe</RemoteName>
                         <Overwrite>true</Overwrite>

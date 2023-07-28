@@ -18,7 +18,7 @@ uses
 implementation
 
 uses
-  DRUnit.Consts, DRUnit.Help, DRUnit.Utils;
+  DRUnit.Consts, DRUnit.Utils;
 
 { The following DecimalRound function is for doing the best possible job of
   rounding floating binary point numbers to the specified NDFD.  MaxRelError
