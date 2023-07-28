@@ -69,7 +69,7 @@ end;
 function DecimalRound(const AValue: single; const ANumberOfDecimals: Integer = 2): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if not IsNaN(AValue) then
+  if IsNaN(AValue) then
     Exit(AValue);
 {$ENDIF}
 
@@ -79,7 +79,7 @@ end;
 function DecimalRound(const AValue: Double; const ANumberOfDecimals: Integer = 2): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if not IsNaN(AValue) then
+  if IsNaN(AValue) then
     Exit(AValue);
 {$ENDIF}
 
@@ -90,7 +90,7 @@ end;
 function DecimalRound(const AValue: Extended; const ANumberOfDecimals: Integer = 2): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if not IsNaN(AValue) then
+  if IsNaN(AValue) then
     Exit(AValue);
 {$ENDIF}
 

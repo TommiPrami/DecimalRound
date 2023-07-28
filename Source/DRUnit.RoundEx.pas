@@ -102,7 +102,7 @@ function DecimalRoundEx(const AValue: single; const ANumberOfDecimals: Integer;
   const ARoundingControl: TDecimalRoundingControl = drcHalfUp): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if not IsNaN(AValue) and (ARoundingControl <> drcNone) then
+  if IsNaN(AValue) or (ARoundingControl = drcNone) then
     Exit(AValue);
 {$ENDIF}
 
@@ -113,7 +113,7 @@ function DecimalRoundEx(const AValue: Double; const ANumberOfDecimals: Integer;
   const ARoundingControl: TDecimalRoundingControl = drcHalfUp): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if not IsNaN(AValue) and (ARoundingControl <> drcNone) then
+  if IsNaN(AValue) or (ARoundingControl = drcNone) then
     Exit(AValue);
 {$ENDIF}
 
@@ -125,7 +125,7 @@ function DecimalRoundEx(const AValue: Extended; const ANumberOfDecimals: Integer
   const ARoundingControl: TDecimalRoundingControl = drcHalfUp): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if not IsNaN(AValue) and (ARoundingControl <> drcNone) then
+  if IsNaN(AValue) or (ARoundingControl = drcNone) then
     Exit(AValue);
 {$ENDIF}
 
