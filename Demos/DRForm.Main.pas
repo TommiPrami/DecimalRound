@@ -27,10 +27,10 @@ implementation
 
 procedure TDRMainForm.ButtonTEstClick(Sender: TObject);
 begin
-  // 1.015 * 100 and rounded is different than 3.015 * 100
+  DoRound('2.245', 2.245);
+  DoRound('1.2451232323', 1.2451232323);
   DoRound('1.015 * 100', 1.015 * 100);
   DoRound('3.015 * 100', 3.015 * 100);
-  DoRound('2.245', 2.245);
 end;
 
 procedure TDRMainForm.DoRound(const AFormulaOrNumber: string; const ARawValue: Extended);
