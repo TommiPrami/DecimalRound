@@ -19,15 +19,15 @@ interface
   be interpreted as 0.3 when applying the rounding rules.
 
   Some terminology:
-    "NDFD" is used for Number of Decimal Fraction Digits.  If NDFD is
+    "NumberOfDecimals" is used for Number of Decimal Fraction Digits.  If NDFD is
         negative, then the inputs will be rounded so that there are zeros
         on the left of the decimal point.  I.E. if NDFD = -3, then the
         output will be rounded to an integral multiple of a thousand.
-    "MaxRelError" designates the maximum relative error to be allowed in the
+    "MaxRelativeError" designates the maximum relative error to be allowed in the
         input values when deciding they are supposed to represent exact
         decimal fractions (as mentioned above).  If Ctrl <> drNone, then
         MaxRelError must be greater than 0.
-    "Ctrl" determines the type of rounding to be done.  Nine kinds of
+    "RoundingControl" determines the type of rounding to be done.  Nine kinds of
         rounding (plus no rounding) are defined.  They include almost
         every kind of rounding known.  See the definition of
         tDecimalRoundingCtrl below for the specific types.
