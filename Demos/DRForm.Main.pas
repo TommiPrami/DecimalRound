@@ -48,7 +48,7 @@ begin
   Result := Ceil(AValue * 100.0) / 100.0;
 end;
 
-function Round5(const AValue: Double): Double;
+function Round5(const AValue: Extended): Extended;
 begin
   Result := Floor(AValue * 100.0) / 100.0;
 end;
