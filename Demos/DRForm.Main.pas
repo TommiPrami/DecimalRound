@@ -8,9 +8,9 @@ uses
 
 type
   TDRMainForm = class(TForm)
-    ButtonTEst: TButton;
+    ButtonTest: TButton;
     MemoLog: TMemo;
-    procedure ButtonTEstClick(Sender: TObject);
+    procedure ButtonTestClick(Sender: TObject);
   private
     { Private declarations }
     procedure DoRound(const AFormulaOrNumber: string; const ARawValue: Extended);
@@ -25,7 +25,35 @@ implementation
 
 {$R *.dfm}
 
-procedure TDRMainForm.ButtonTEstClick(Sender: TObject);
+uses
+  System.Math;
+
+function Round1(const AValue: Extended): Extended;
+begin
+  Result := Trunc(AValue * 100 + 0.50) / 100;
+end;
+
+function Round2(const AValue: Extended): Extended;
+begin
+  Result := Round(AValue * 100) / 100;
+end;
+
+function Round3(const AValue: Extended): Extended;
+begin
+  Result := Round(AValue * 100.0) / 100.0;
+end;
+
+function Round4(const AValue: Extended): Extended;
+begin
+  Result := Ceil(AValue * 100.0) / 100.0;
+end;
+
+function Round5(const AValue: Double): Double;
+begin
+  Result := Floor(AValue * 100.0) / 100.0;
+end;
+
+procedure TDRMainForm.ButtonTestClick(Sender: TObject);
 begin
   DoRound('2.245', 2.245);
   DoRound('1.2451232323', 1.2451232323);

@@ -11,7 +11,7 @@ object DRMainForm: TDRMainForm
   Font.Name = 'Segoe UI'
   Font.Style = []
   TextHeight = 15
-  object ButtonTEst: TButton
+  object ButtonTest: TButton
     Left = 458
     Top = 8
     Width = 75
