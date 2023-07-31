@@ -7,8 +7,8 @@ interface
 uses
   System.Classes, DRUnit.Consts;
 
-  { This procedure was used to compute the values SglEps, DblEps, and ExtEps: }
-  procedure CalcEpsValues(var SglEps, DblEps, ExtEps: Double);
+  { This procedure was used to compute the Epsilon values }
+  procedure CalcEpsValues(var ASingleEpsilon, ADoubleEpsilon, AExtendedEpsilon: Double);
 
   { Each returns true if the value passed is not-a-number. }
   function IsNAN(const ASingleValue: Single): Boolean; overload; inline;
@@ -20,6 +20,9 @@ uses
   { Returns the FPU control word (which indicates interrupt masks and precision and rounding modes). }
   function GetX87CW: Word;
 
+  { Interpretes X87 control word and returns as a string. }
+  function X87CWToString(const AControlWord: Word): string;
+
   { Returns true if floating point processor (FPU) is correctly set
     (1) to allow conversion from extended to double and double to single
         without creating the the loss-of-precision interrupt or exception,
@@ -30,7 +33,7 @@ uses
   { This procedure loads the tDecimalRoundingCtrl descriptions and ordinals
     into the string list for such use as using a TCombobox to make rounding
     type selection. }
-  procedure LoadDecimalRoundingCtrlAbbrs(const AStrings: TStrings);
+  procedure LoadDecimalRoundingCtrlAbbrs(const AStrings: TStrings; const AAddAbbreviotion: Boolean = True);
 
 var
   gRoundFoatMultiplierArray: array [-ROUND_FLOAT_MAX_DECIMAL_COUNT..ROUND_FLOAT_MAX_DECIMAL_COUNT] of Extended;
@@ -38,11 +41,11 @@ var
 implementation
 
 uses
-  DRUnit.Types;
+  System.SysUtils, DRUnit.Types;
 
 { Compute smallest 1/(2^n) epsilon values for which "1 + epsilon <> 1".
   For "1 - epsilon <> 1", divide these computed values by 2. }
-procedure CalcEpsValues(var SglEps, DblEps, ExtEps: Double);
+procedure CalcEpsValues(var ASingleEpsilon, ADoubleEpsilon, AExtendedEpsilon: Double);
 var
   s: Single;
   d: Double;
@@ -55,7 +58,7 @@ begin
     f := f / 2.00;
     s := 1.00 + f / 2.00;
   Until s = 1.00;
-  SglEps := f;
+  ASingleEpsilon := f;
 
   { Compute for Double, d: }
   f := 1.00;
@@ -63,47 +66,42 @@ begin
     f := f / 2.00;
     d := 1.00 + f / 2.00;
   until d = 1.00;
-  DblEps := f;
+  ADoubleEpsilon := f;
 
   { Compute with Extended, e: }
   f := 1.00;
   repeat
     f := f / 2.00;
     e := 1.00 + f / 2.00;
-  Until e = 1.00;
-  ExtEps := f;
-end;
+  until e = 1.00;
 
-type
-  TExtPackedRec = packed record
-    Man: Int64;
-    Exp: Word
-  end;
+  AExtendedEpsilon := f;
+end;
 
 function IsNAN(const ASingleValue: Single): Boolean;
 var
-  InputX: LongInt absolute ASingleValue;
+  LInputX: LongInt absolute ASingleValue;
 begin
-  Result := (InputX <> 0) and ((InputX and SglExpBits) = SglExpBits);
+  Result := (LInputX <> 0) and ((LInputX and SINGLE_EXPONENT_BITS) = SINGLE_EXPONENT_BITS);
 end;
 
 function IsNAN(const ADoubleValue: Double): Boolean;
 var
-  InputX: Int64 absolute ADoubleValue;
+  LInputX: Int64 absolute ADoubleValue;
 begin
-  Result := (InputX <> 0) and ((InputX and DblExpBits) = DblExpBits);
+  Result := (LInputX <> 0) and ((LInputX and DOUBLE_EXPONENT_BITS) = DOUBLE_EXPONENT_BITS);
 end;
 
 {$IFDEF SUPPORTS_TRUE_EXTENDED}
 function IsNAN(const AExtendedValue: extended): boolean;
 var
-  InputX: TExtPackedRec absolute AExtendedValue;
+  LInputX: TExtendedtRec absolute AExtendedValue;
 begin
-  Result := (InputX.Man <> 0) and ((InputX.Exp and ExtExpBits)=ExtExpBits);
+  Result := (LInputX.Significand <> 0) and ((LInputX.Exponent and EXTENDED_EXPONENT_BITS) = EXTENDED_EXPONENT_BITS);
 end;
 {$ENDIF}
 
-procedure LoadDecimalRoundingCtrlAbbrs(const AStrings: TStrings);
+procedure LoadDecimalRoundingCtrlAbbrs(const AStrings: TStrings; const AAddAbbreviotion: Boolean = True);
 var
   LRoundingControl: TDecimalRoundingControl;
 begin
@@ -111,7 +109,10 @@ begin
 
   AStrings.Clear;
   for LRoundingControl := Low(LRoundingControl) to High(LRoundingControl) do
-    AStrings.AddObject(string(DecimalRoundingCtrlStrs[LRoundingControl].Abbr), Pointer(LRoundingControl));
+    if AAddAbbreviotion then
+      AStrings.AddObject(ROUNDING_CONTROL_STRINGS[LRoundingControl].Abbreviation, Pointer(LRoundingControl))
+    else
+      AStrings.AddObject(ROUNDING_CONTROL_STRINGS[LRoundingControl].Description, Pointer(LRoundingControl));
 end;
 
 { Returns the FPU control word (which indicates interrupt masks and precision and rounding modes). }
@@ -120,18 +121,63 @@ asm
   FStCW [Result]
 end;
 
+{ PickX87PrecisionCtrl picks FPU precision control out of CW.}
+function PickX87PrecisionCtrl(const AControlWord: word): TX87PrecisionControl;
+begin
+  Result := TX87PrecisionControl((AControlWord and $0300) shr 8);
+end;
+
+{ PickX87RoundingCtrl picks FPU rounding control out of CW.}
+function PickX87RoundingCtrl(const AControlWord: Word): TX87RoundingControl;
+begin
+  Result := TX87RoundingControl((AControlWord and $0C00) shr 10);
+end;
+
+{ PickX87InterruptMask picks FPU interrupt mask bits out of CW.}
+function PickX87InterruptMask(const AControlWord: Word): TX87InterruptBits;
+begin
+  Result := TX87InterruptBits(Byte(AControlWord and $00FF));
+end;
+
+{ Interpretes X87 control word and returns as a string. }
+function X87CWToString(const AControlWord: Word): string;
+var
+  LRoundingControl: TX87RoundingControl;
+  LPrecisionControl: TX87PrecisionControl;
+  LMask: TX87InterruptBits;
+  LInterruptBit: TX87InterruptBit;
+begin
+  LRoundingControl := PickX87RoundingCtrl(AControlWord);
+  LPrecisionControl := PickX87PrecisionCtrl(AControlWord);
+  LMask := PickX87InterruptMask(AControlWord);
+
+  Result := '';
+
+  for LInterruptBit := Low(LInterruptBit) to high(LInterruptBit) do
+    if LInterruptBit in LMask then
+      Result := Result + INTERRUPT_MASK_STRINGS[LInterruptBit] + ',';
+
+  if Length(Result) > 0 then
+    SetLength(Result, Length(Result) - 1);
+
+  Result := 'FPU Rounding=' + X87_ROUNDING_CONTROL_STRINGS[LRoundingControl]
+    + '; Precision=' + PRECICION_CONTROL_STRINGS[LPrecisionControl]
+    + '; ExceptionMasks=[' + Result + '] $' + IntToHex(AControlWord, 4);
+end;
+
 { Checks to see that floating point processor (FPU) is correctly set to
 
     (1) allow conversion from extended to double and double to single
         without creating the the loss of precision interrupt or exception,
     (2) do arithmetic internal to FPU in extended precision, and
     (3) use round halves-to-even (a.k.a. bankers rounding) internally. }
-function IsFpuCwOkForRounding: boolean;
+function IsFpuCwOkForRounding: Boolean;
 var
-  CW: word;
+  LControlWord: Word;
 begin
-  CW := GetX87CW;
-  Result := ((CW and (PC or RC or PM)) = (rcBankers or pcExtended or PM));
+  LControlWord := GetX87CW;
+
+  Result := ((LControlWord and (PC or RC or PM)) = (RC_BANKERS or PC_EXTENDED or PM));
 end;
 
 procedure InitializeRoundFloatMultiplierLookUp;

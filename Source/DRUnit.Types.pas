@@ -3,6 +3,20 @@
 interface
 
 type
+  TX87RoundingControl = (rcBankers, rcFloor, rcCeil, rcChop);
+  TX87PrecisionControl = (pcSingle, pcReserved, pcDouble, pcExtended);
+  TX87InterruptBit = (ibI, ibD, ibZ, ibO, ibU, ibP, ib6, ib7);
+  TX87InterruptBits = set of tX87InterruptBit;
+
+  tB10 = array [0..9] of Byte;
+  tB8 = array [0..7] of Byte;
+  tB4 = array [0..3] of Byte;
+
+  TExtendedtRec = packed record
+    Significand: int64;
+    Exponent: Word;
+  end;
+
   TDecimalRoundingControl =    {The defined rounding methods}
     (
       drcNone,    {No rounding.}

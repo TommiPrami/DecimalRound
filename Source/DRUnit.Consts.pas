@@ -25,8 +25,6 @@ const
   MAXIMUM_RELATIVE_ERROR_DOUBLE = EPSILON_DOUBLE * KNOWN_ERROR_LIMIT * SAFETY_FACTOR;
   MAXIMUM_RELATIVE_ERROR_EXTENDED = EPSILON_EXTENDED * KNOWN_ERROR_LIMIT * SAFETY_FACTOR;
 
-
-
   { These FPU Control Word bit masks prevent interrupt when present: }
   IM = $0001; {Invalid op interrupt Mask}
   DM = $0002; {Denormalized op interrupt Mask}
@@ -39,38 +37,73 @@ const
   { These FPU Control Word bit fields change operation: }
   PC = $0300; {Precision Control mask}
   RC = $0C00; {Rounding Control mask}
-  pcSingle = $0000;
-  pcDouble = $0200;
-  pcExtended = $0300;
-  rcBankers = $0000;
-  rcFloor = $0400;
-  rcCeil = $0800;
-  rcChop = $0C00;
+
+  PC_SINGLE = $0000;
+  PC_DOUBLE = $0200;
+  PC_EXTENDED = $0300;
+
+  RC_BANKERS = $0000;
+  RC_FLOOR = $0400;
+  RC_CEIL = $0800;
+  RC_CHOP = $0C00;
 
   ROUND_FLOAT_MAX_DECIMAL_COUNT = 19;
 
-  SglExpBits: LongInt = $7F800000;          { 8 bits}
-  DblExpBits: Int64   = $7FF0000000000000;  {11 bits}
-  ExtExpBits: word    = $7FFF;              {15 bits}
+  SINGLE_EXPONENT_BITS: LongInt = $7F800000; { 8 bits}
+  DOUBLE_EXPONENT_BITS: Int64 = $7FF0000000000000; {11 bits}
+  EXTENDED_EXPONENT_BITS: Word = $7FFF; {15 bits}
 
-  DecimalRoundingCtrlStrs: array [TDecimalRoundingControl] of
+  ROUNDING_CONTROL_STRINGS: array [TDecimalRoundingControl] of
       record
-        Abbr: string[9];
-        Dscr: string[59];
+        Abbreviation: string;
+        Description: string;
       end =
     (
-      (Abbr: 'None'    ; Dscr: 'No rounding.'),
-      (Abbr: 'HalfEven'; Dscr: 'Round to nearest or to even whole number (a.k.a Bankers)'),
-      (Abbr: 'HalfPos' ; Dscr: 'Round to nearest or toward positive'),
-      (Abbr: 'HalfNeg' ; Dscr: 'Round to nearest or toward negative'),
-      (Abbr: 'HalfDown'; Dscr: 'Round to nearest or toward zero'),
-      (Abbr: 'HalfUp'  ; Dscr: 'Round to nearest or away from zero'),
-      (Abbr: 'RndNeg'  ; Dscr: 'Round toward negative. (a.k.a. Floor) '),
-      (Abbr: 'RndPos'  ; Dscr: 'Round toward positive. (a.k.a. Ceil ) '),
-      (Abbr: 'RndDown' ; Dscr: 'Round toward zero. (a.k.a. Trunc) '),
-      (Abbr: 'RndUp'   ; Dscr: 'Round away from zero.')
+      (Abbreviation: 'None'    ; Description: 'No rounding.'),
+      (Abbreviation: 'HalfEven'; Description: 'Round to nearest or to even whole number (a.k.a Bankers)'),
+      (Abbreviation: 'HalfPos' ; Description: 'Round to nearest or toward positive'),
+      (Abbreviation: 'HalfNeg' ; Description: 'Round to nearest or toward negative'),
+      (Abbreviation: 'HalfDown'; Description: 'Round to nearest or toward zero'),
+      (Abbreviation: 'HalfUp'  ; Description: 'Round to nearest or away from zero'),
+      (Abbreviation: 'RndNeg'  ; Description: 'Round toward negative. (a.k.a. Floor) '),
+      (Abbreviation: 'RndPos'  ; Description: 'Round toward positive. (a.k.a. Ceil ) '),
+      (Abbreviation: 'RndDown' ; Description: 'Round toward zero. (a.k.a. Trunc) '),
+      (Abbreviation: 'RndUp'   ; Description: 'Round away from zero.')
     );
 
+(* CW Mask bits prevent interrupt when true:
+   (Pending interrupt flags in status word have matching positions.) )
+    $0001 -- IM (Invalid op interrupt Mask)
+    $0002 -- DM (Denormalized op interrupt Mask)
+    $0004 -- ZM (Zero divide interrupt Mask)
+    $0008 -- OM (Overflow interrupt Mask)
+    $0010 -- UM (Underflow interrupt Mask)
+    $0020 -- PM (Loss of precision interrupt Mask) }
+{ CW Control bits change operation:
+    $0300 -- PC (Precision Control mask)
+    $0C00 -- RC (Rounding Control mask)
+    $1000 -- IC (Infinity Control mask) *)
+
+const {define long names}
+  ibInValidOperation = ibI;
+  ibDenormalizedOperand = ibD;
+  ibZeroDivide = ibZ;
+  ibOverflow = ibO;
+  ibUnderflow = ibU;
+  ibPrecision = ibP;
+
+  X87_ROUNDING_CONTROL_STRINGS: array [TX87RoundingControl] of string = ('bankers', 'floor', 'ceil', 'chop');
+  PRECICION_CONTROL_STRINGS: array [TX87PrecisionControl] of string = ('single', 'reserved', 'double', 'extended');
+  INTERRUPT_MASK_STRINGS: array [TX87InterruptBit] of string = ('IM', 'DM', 'ZM', 'OM', 'UM', 'PM', 'm6', 'm7');
+  INTERRUPT_STATUS_STRINGS: array [TX87InterruptBit] of string = ('IE', 'DE', 'ZE', 'OE', 'UE', 'PE', 'e6', 'e7');
+
+  DIGITS: array [0..9] of Char = '0123456789';
+
+  NUMBER_OF_BITS_TO_CLEAR = 8;
+  MASK: int64 = $FFFFFFFFFFFFFFFF shr NUMBER_OF_BITS_TO_CLEAR;
+
+  INC_DOUBLE = $1000;
+  INC_SINGLE = $10000000000;
 
 implementation
 
