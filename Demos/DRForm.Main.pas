@@ -12,12 +12,13 @@ type
     PanelButtons: TPanel;
     ButtonRoundTest: TButton;
     ButtonExactFloat: TButton;
+    procedure ButtonExactFloatClick(Sender: TObject);
     procedure ButtonRoundTestClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure ButtonExactFloatClick(Sender: TObject);
   private
     { Private declarations }
     procedure DoRound(const AFormulaOrNumber: string; const ARawValue, AExpectedValue: Extended);
+    procedure Log(const AMessage: string; const AIndent: Integer = 0);
     function FToStr(const AValue: Extended): string;
   public
     { Public declarations }
@@ -31,7 +32,7 @@ implementation
 {$R *.dfm}
 
 uses
-  System.Math, DRUnit.ExactFlotUtils, DRUnit.Round, DRUnit.RoundEx;
+  System.Math, DRUnit.ExactFlotUtils, DRUnit.Round, DRUnit.RoundEx, DRUnit.Utils;
 var
   GFormatSettigns: TFormatSettings;
 
@@ -62,7 +63,9 @@ end;
 
 procedure TDRMainForm.ButtonExactFloatClick(Sender: TObject);
 begin
-  MemoLog.Lines.Add(ExactFloatToStr(1.1234, 3));
+  Log(ExactFloatToStr(1.1234, 3));
+
+  Log('');
 end;
 
 procedure TDRMainForm.ButtonRoundTestClick(Sender: TObject);
@@ -75,14 +78,16 @@ begin
   DoRound('1.2451232323', 1.2451232323, 1.25);
   DoRound('1.015 * 100', 1.015 * 100, 101.50);
   DoRound('3.015 * 100', 3.015 * 100, 301.50);
+
+  Log('');
 end;
 
 procedure TDRMainForm.DoRound(const AFormulaOrNumber: string; const ARawValue, AExpectedValue: Extended);
 begin
   if AFormulaOrNumber = '' then
-    MemoLog.Lines.Add('formula/value;RawValue;ExpectedResult;DecimalRound;Round1,Round2;Round3;Round4;Round5')
+    Log('formula/value;RawValue;ExpectedResult;DecimalRound;Round1,Round2;Round3;Round4;Round5')
   else
-    MemoLog.Lines.Add(AFormulaOrNumber
+    Log(AFormulaOrNumber
       + ';' + FToStr(ARawValue)
       + ';' + FToStr(AExpectedValue)
       + ';' + FToStr(Round1(ARawValue))
@@ -90,7 +95,6 @@ begin
       + ';' + FToStr(Round3(ARawValue))
       + ';' + FToStr(Round4(ARawValue))
       + ';' + FToStr(Round5(ARawValue))
-
       );;
 end;
 
@@ -99,11 +103,22 @@ begin
   GFormatSettigns := TFormatSettings.Create;
   GFormatSettigns.DecimalSeparator := '.';
   GFormatSettigns.ThousandSeparator := ' ';
+
+  if not IsFpuCwOkForRounding then
+    raise Exception.Create('FPU Control word is not OK for DecimalRound routines');
+
+  Log(X87CWToString(GetX87CW));
+  Log('');
 end;
 
 function TDRMainForm.FToStr(const AValue: Extended): string;
 begin
   Result := FloatToStr(AValue, GFormatSettigns);
+end;
+
+procedure TDRMainForm.Log(const AMessage: string; const AIndent: Integer);
+begin
+  MemoLog.Lines.Add(StringOfChar(' ', AIndent * 2) + AMessage);
 end;
 
 end.
