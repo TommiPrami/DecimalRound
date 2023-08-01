@@ -17,9 +17,9 @@ type
     procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
-    procedure DoRound(const AFormulaOrNumber: string; const ARawValue, AExpectedValue: Extended);
+    procedure DoRound(const AFormulaOrNumber: string; const ARawValue: Extended; const AExpectedValue: string);
     procedure Log(const AMessage: string; const AIndent: Integer = 0);
-    function FToStr(const AValue: Extended): string;
+    function FToStr(const AValue: Extended; const ADecimalCount: Integer = 6): string;
   public
     { Public declarations }
   end;
@@ -71,25 +71,26 @@ end;
 procedure TDRMainForm.ButtonRoundTestClick(Sender: TObject);
 begin
   // Headerr
-  DoRound('', 0.00, 0.00);
+  DoRound('', 0.00, '0.00');
 
   // Tests
-  DoRound('2.245', 2.245, 2.25);
-  DoRound('1.2451232323', 1.2451232323, 1.25);
-  DoRound('1.015 * 100', 1.015 * 100, 101.50);
-  DoRound('3.015 * 100', 3.015 * 100, 301.50);
+  DoRound('2.245', 2.245, '2.25');
+  DoRound('1.2451232323', 1.2451232323, '+1.25');
+  DoRound('1.015 * 100', 1.015 * 100, '+101.5');
+  DoRound('3.015 * 100', 3.015 * 100, '+301.5');
 
   Log('');
 end;
 
-procedure TDRMainForm.DoRound(const AFormulaOrNumber: string; const ARawValue, AExpectedValue: Extended);
+procedure TDRMainForm.DoRound(const AFormulaOrNumber: string; const ARawValue: Extended; const AExpectedValue: string);
 begin
   if AFormulaOrNumber = '' then
     Log('formula/value;RawValue;ExpectedResult;DecimalRound;Round1,Round2;Round3;Round4;Round5')
   else
     Log(AFormulaOrNumber
       + ';' + FToStr(ARawValue)
-      + ';' + FToStr(AExpectedValue)
+      + ';' + AExpectedValue
+      + ';' + FToStr(DecimalRound(ARawValue))
       + ';' + FToStr(Round1(ARawValue))
       + ';' + FToStr(Round2(ARawValue))
       + ';' + FToStr(Round3(ARawValue))
@@ -111,9 +112,22 @@ begin
   Log('');
 end;
 
-function TDRMainForm.FToStr(const AValue: Extended): string;
+function TDRMainForm.FToStr(const AValue: Extended; const ADecimalCount: Integer = 6): string;
+var
+  LSeparatorPos: Integer;
+  LStrLenght: Integer;
+  LRawResultDecimalCount: Integer;
 begin
-  Result := FloatToStr(AValue, GFormatSettigns);
+  Result := ExactFloatToStr(AValue, 0);
+
+  LSeparatorPos := Pos('.', Result);
+  LStrLenght := Length(Result);
+  LRawResultDecimalCount := LStrLenght - LSeparatorPos;
+
+  if (LSeparatorPos > 0) and (LRawResultDecimalCount > ADecimalCount) then
+    Result := Copy(Result, 1, LSeparatorPos + ADecimalCount)
+  else
+    Result := Result + StringOfChar('0', ADecimalCount - LRawResultDecimalCount);
 end;
 
 procedure TDRMainForm.Log(const AMessage: string; const AIndent: Integer);
@@ -122,3 +136,4 @@ begin
 end;
 
 end.
+
