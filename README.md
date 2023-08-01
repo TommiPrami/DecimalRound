@@ -49,6 +49,6 @@ As far as I know, the original code was donated to the community without a licen
 
 ## TODO:
 - Add good set of Unit Tests
-- Some examples in the demo, that usually fail, and maybe compare to rounding algorithms usually suggested in the web.
+- Some examples in the demo, that usually fail, and maybe compare to rounding algorithms usually suggested in the web. (Started and partially done)
 - (have not thought about this yet)
  
