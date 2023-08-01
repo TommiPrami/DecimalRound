@@ -133,7 +133,7 @@
         <DCCReference Include="..\Source\DRUnit.RoundEx.pas"/>
         <DCCReference Include="..\Source\DRUnit.Types.pas"/>
         <DCCReference Include="..\Source\DRUnit.Utils.pas"/>
-        <DCCReference Include="..\Source\DRUnit.ExactFlotUtils.pas"/>
+        <DCCReference Include="..\Source\DRUnit.ExactFloatUtils.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

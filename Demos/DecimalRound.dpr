@@ -8,7 +8,7 @@ uses
   DRUnit.RoundEx in '..\Source\DRUnit.RoundEx.pas',
   DRUnit.Types in '..\Source\DRUnit.Types.pas',
   DRUnit.Utils in '..\Source\DRUnit.Utils.pas',
-  DRUnit.ExactFlotUtils in '..\Source\DRUnit.ExactFlotUtils.pas';
+  DRUnit.ExactFloatUtils in '..\Source\DRUnit.ExactFloatUtils.pas';
 
 {$R *.res}
 

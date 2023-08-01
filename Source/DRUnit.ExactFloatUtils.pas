@@ -1,4 +1,4 @@
-﻿unit DRUnit.ExactFlotUtils;
+﻿unit DRUnit.ExactFloatUtils;
 
 (* *****************************************************************************
 

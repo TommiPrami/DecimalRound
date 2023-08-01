@@ -32,7 +32,7 @@ implementation
 {$R *.dfm}
 
 uses
-  System.Math, DRUnit.ExactFlotUtils, DRUnit.Round, DRUnit.RoundEx, DRUnit.Utils;
+  System.Math, DRUnit.ExactFloatUtils, DRUnit.Round, DRUnit.RoundEx, DRUnit.Utils;
 var
   GFormatSettigns: TFormatSettings;
 
@@ -95,7 +95,7 @@ begin
       + ';' + FToStr(Round3(ARawValue))
       + ';' + FToStr(Round4(ARawValue))
       + ';' + FToStr(Round5(ARawValue))
-      );;
+    );
 end;
 
 procedure TDRMainForm.FormCreate(Sender: TObject);
