@@ -70,7 +70,7 @@ end;
 
 procedure TDRMainForm.ButtonRoundTestClick(Sender: TObject);
 begin
-  // Headerr
+  // Header
   DoRound('', 0.00, '0.00');
 
   // Tests
