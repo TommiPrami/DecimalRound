@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Messages, Winapi.Windows, System.Classes, System.SysUtils, System.Variants, Vcl.Controls, Vcl.Dialogs,
-  Vcl.Forms, Vcl.Graphics, Vcl.StdCtrls, Vcl.ExtCtrls;
+  Vcl.ExtCtrls, Vcl.Forms, Vcl.Graphics, Vcl.StdCtrls;
 
 type
   TDRMainForm = class(TForm)
@@ -21,7 +21,6 @@ type
     procedure Log(const AMessage: string; const AIndent: Integer = 0);
     function FToStr(const AValue: Extended; const ADecimalCount: Integer = 6): string;
   public
-    { Public declarations }
   end;
 
 var
@@ -76,8 +75,8 @@ begin
   // Tests
   DoRound('2.245', 2.245, '2.25');
   DoRound('1.2451232323', 1.2451232323, '+1.25');
-  DoRound('1.015 * 100', 1.015 * 100, '+101.5');
-  DoRound('3.015 * 100', 3.015 * 100, '+301.5');
+  DoRound('1.015 * 100', 1.015 * 100.00, '+101.5');
+  DoRound('3.015 * 100', 3.015 * 100.00, '+301.5');
 
   Log('');
 end;
