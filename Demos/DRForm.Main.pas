@@ -115,14 +115,14 @@ end;
 function TDRMainForm.FToStr(const AValue: Extended; const ADecimalCount: Integer = 6): string;
 var
   LSeparatorPos: Integer;
-  LStrLenght: Integer;
+  LStrLength: Integer;
   LRawResultDecimalCount: Integer;
 begin
   Result := ExactFloatToStr(AValue, 0);
 
   LSeparatorPos := Pos('.', Result);
-  LStrLenght := Length(Result);
-  LRawResultDecimalCount := LStrLenght - LSeparatorPos;
+  LStrLength := Length(Result);
+  LRawResultDecimalCount := LStrLength - LSeparatorPos;
 
   if (LSeparatorPos > 0) and (LRawResultDecimalCount > ADecimalCount) then
     Result := Copy(Result, 1, LSeparatorPos + ADecimalCount)
