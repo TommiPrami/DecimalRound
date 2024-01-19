@@ -7,7 +7,7 @@ interface
 uses
   DRUnit.Types;
 
-  { The following functions have a two times "epsilon" error built in for the single, double, and extended argument
+  { The following functions have a two times "epsilon" error built in for the Single, Double and Extended argument
     respectively }
   function DecimalRoundEx(const AValue: Single; const ANumberOfDecimals: Integer;
     const ARoundingControl: TDecimalRoundingControl = drcHalfUp): Extended; overload;
@@ -98,11 +98,11 @@ begin
     Result := -Result;
 end;
 
-function DecimalRoundEx(const AValue: single; const ANumberOfDecimals: Integer;
+function DecimalRoundEx(const AValue: Single; const ANumberOfDecimals: Integer;
   const ARoundingControl: TDecimalRoundingControl = drcHalfUp): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if IsNaN(AValue) or (ARoundingControl = drcNone) then
+  if IsNan(AValue) or (ARoundingControl = drcNone) then
     Exit(AValue);
 {$ENDIF}
 
@@ -113,7 +113,7 @@ function DecimalRoundEx(const AValue: Double; const ANumberOfDecimals: Integer;
   const ARoundingControl: TDecimalRoundingControl = drcHalfUp): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if IsNaN(AValue) or (ARoundingControl = drcNone) then
+  if IsNan(AValue) or (ARoundingControl = drcNone) then
     Exit(AValue);
 {$ENDIF}
 
@@ -125,7 +125,7 @@ function DecimalRoundEx(const AValue: Extended; const ANumberOfDecimals: Integer
   const ARoundingControl: TDecimalRoundingControl = drcHalfUp): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if IsNaN(AValue) or (ARoundingControl = drcNone) then
+  if IsNan(AValue) or (ARoundingControl = drcNone) then
     Exit(AValue);
 {$ENDIF}
 

@@ -11,10 +11,10 @@ uses
   procedure CalcEpsValues(var ASingleEpsilon, ADoubleEpsilon, AExtendedEpsilon: Double);
 
   { Each returns true if the value passed is not-a-number. }
-  function IsNAN(const ASingleValue: Single): Boolean; overload; inline;
-  function IsNAN(const ADoubleValue: Double): Boolean; overload; inline;
+  function IsNan(const ASingleValue: Single): Boolean; overload; inline;
+  function IsNan(const ADoubleValue: Double): Boolean; overload; inline;
 {$IFDEF SUPPORTS_TRUE_EXTENDED}
-  function IsNAN(const AExtendedValue: Extended): Boolean; overload; inline;
+  function IsNan(const AExtendedValue: Extended): Boolean; overload; inline;
 {$ENDIF}
 
   { Returns the FPU control word (which indicates interrupt masks and precision and rounding modes). }
@@ -24,9 +24,9 @@ uses
   function X87CWToString(const AControlWord: Word): string;
 
   { Returns true if floating point processor (FPU) is correctly set
-    (1) to allow conversion from extended to double and double to single
+    (1) to allow conversion from Extended to Double and Double to Single
         without creating the the loss-of-precision interrupt or exception,
-    (2) to do arithmetic internal to FPU in extended precision, and
+    (2) to do arithmetic internal to FPU in Extended precision, and
     (3) to internally use halves-to-even (a.k.a. bankers) rounding. }
   function IsFpuCwOkForRounding: Boolean;
 
@@ -57,7 +57,7 @@ begin
   repeat
     f := f / 2.00;
     s := 1.00 + f / 2.00;
-  Until s = 1.00;
+  until s = 1.00;
   ASingleEpsilon := f;
 
   { Compute for Double, d: }
@@ -78,14 +78,14 @@ begin
   AExtendedEpsilon := f;
 end;
 
-function IsNAN(const ASingleValue: Single): Boolean;
+function IsNan(const ASingleValue: Single): Boolean;
 var
   LInputX: LongInt absolute ASingleValue;
 begin
   Result := (LInputX <> 0) and ((LInputX and SINGLE_EXPONENT_BITS) = SINGLE_EXPONENT_BITS);
 end;
 
-function IsNAN(const ADoubleValue: Double): Boolean;
+function IsNan(const ADoubleValue: Double): Boolean;
 var
   LInputX: Int64 absolute ADoubleValue;
 begin
@@ -93,7 +93,7 @@ begin
 end;
 
 {$IFDEF SUPPORTS_TRUE_EXTENDED}
-function IsNAN(const AExtendedValue: extended): boolean;
+function IsNan(const AExtendedValue: Extended): Boolean;
 var
   LInputX: TExtendedtRec absolute AExtendedValue;
 begin
@@ -122,7 +122,7 @@ asm
 end;
 
 { PickX87PrecisionCtrl picks FPU precision control out of CW.}
-function PickX87PrecisionCtrl(const AControlWord: word): TX87PrecisionControl;
+function PickX87PrecisionCtrl(const AControlWord: Word): TX87PrecisionControl;
 begin
   Result := TX87PrecisionControl((AControlWord and $0300) shr 8);
 end;
@@ -153,7 +153,7 @@ begin
 
   Result := '';
 
-  for LInterruptBit := Low(LInterruptBit) to high(LInterruptBit) do
+  for LInterruptBit := Low(LInterruptBit) to High(LInterruptBit) do
     if LInterruptBit in LMask then
       Result := Result + INTERRUPT_MASK_STRINGS[LInterruptBit] + ',';
 
@@ -167,9 +167,9 @@ end;
 
 { Checks to see that floating point processor (FPU) is correctly set to
 
-    (1) allow conversion from extended to double and double to single
+    (1) allow conversion from Extended to Double and Double to Single
         without creating the the loss of precision interrupt or exception,
-    (2) do arithmetic internal to FPU in extended precision, and
+    (2) do arithmetic internal to FPU in Extended precision, and
     (3) use round halves-to-even (a.k.a. bankers rounding) internally. }
 function IsFpuCwOkForRounding: Boolean;
 var

@@ -7,7 +7,7 @@ interface
 uses
   DRUnit.Types;
 
-  { The following functions have a two times "epsilon" error built in for the single, double, and extended argument
+  { The following functions have a two times "epsilon" error built in for the Single, Double, and Extended argument
     respectively }
   function DecimalRound(const AValue: Single; const ANumberOfDecimals: Integer = 2): Extended; overload;
   function DecimalRound(const AValue: Double; const ANumberOfDecimals: Integer = 2): Extended; overload;
@@ -66,10 +66,10 @@ begin
     Result := -Result;
 end;
 
-function DecimalRound(const AValue: single; const ANumberOfDecimals: Integer = 2): Extended;
+function DecimalRound(const AValue: Single; const ANumberOfDecimals: Integer = 2): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if IsNaN(AValue) then
+  if IsNan(AValue) then
     Exit(AValue);
 {$ENDIF}
 
@@ -79,7 +79,7 @@ end;
 function DecimalRound(const AValue: Double; const ANumberOfDecimals: Integer = 2): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if IsNaN(AValue) then
+  if IsNan(AValue) then
     Exit(AValue);
 {$ENDIF}
 
@@ -90,7 +90,7 @@ end;
 function DecimalRound(const AValue: Extended; const ANumberOfDecimals: Integer = 2): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if IsNaN(AValue) then
+  if IsNan(AValue) then
     Exit(AValue);
 {$ENDIF}
 

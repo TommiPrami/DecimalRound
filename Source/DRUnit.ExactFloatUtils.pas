@@ -83,7 +83,7 @@ begin
 
   if ASpaceInterval > 0 then
   begin
-    LIndex := length(Result);
+    LIndex := Length(Result);
 
     while (LIndex > 5) and CharInSet(Result[LIndex], ['0'..'9']) do
     begin
@@ -177,7 +177,7 @@ end;
 
 function UnpackFloatToStr(var AExtendedValue: Extended): string; overload;
 var
-  LNegative: boolean;
+  LNegative: Boolean;
   LIndex: Integer;
   LExtendedtRec: TExtendedtRec;
   LExtendedValue: Extended;
@@ -230,7 +230,7 @@ begin
   SetLength(Result, Length(Result) - 1);
 end;
 
-function UnpackFloatToStr(var ASingleValue: single): string; overload;
+function UnpackFloatToStr(var ASingleValue: Single): string; overload;
 var
   LNegative: Boolean;
   LIndex: Integer;
@@ -337,7 +337,7 @@ end;
 function Pred(const ADoubleValue: Double): Double;
 var
   LExtendedtRec: TExtendedtRec;
-  LExtendedValue: extended;
+  LExtendedValue: Extended;
 begin
   if ADoubleValue < 0 then
     Exit(-Succ(-ADoubleValue))
