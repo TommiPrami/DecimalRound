@@ -34,7 +34,7 @@ uses
   System.Math, DRUnit.ExactFloatUtils, DRUnit.Round, DRUnit.RoundEx, DRUnit.Utils;
 
 var
-  GFormatSettigns: TFormatSettings;
+  GFormatSettings: TFormatSettings;
 
 function Round1(const AValue: Extended): Extended;
 begin
@@ -101,9 +101,9 @@ end;
 
 procedure TDRMainForm.FormCreate(Sender: TObject);
 begin
-  GFormatSettigns := TFormatSettings.Create;
-  GFormatSettigns.DecimalSeparator := '.';
-  GFormatSettigns.ThousandSeparator := ' ';
+  GFormatSettings := TFormatSettings.Create;
+  GFormatSettings.DecimalSeparator := '.';
+  GFormatSettings.ThousandSeparator := ' ';
 
   if not IsFpuCwOkForRounding then
     raise Exception.Create('FPU Control word is not OK for DecimalRound routines');
