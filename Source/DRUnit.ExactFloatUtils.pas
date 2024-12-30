@@ -136,7 +136,7 @@ var
 begin
   Result := '';
 
-  for  LIndex:= 0 to SizeOf(AExtendedValue) - 1 do
+  for  LIndex := 0 to SizeOf(AExtendedValue) - 1 do
   begin
     if ALittleEndian then
       Result := Result + IntToHex(tB10(AExtendedValue)[LIndex], 2)
@@ -224,7 +224,7 @@ begin
   Result := Result + ' 2^' + IntToStr(LExtendedtRec.Exponent - $3ffe) + ' * ';
   Result := Result + ' $0.';
 
-  for LIndex:= 7 downto 1 do
+  for LIndex := 7 downto 1 do
     Result := Result + IntToHex(tB10(LExtendedValue)[LIndex], 2);
 
   SetLength(Result, Length(Result) - 1);
@@ -253,7 +253,7 @@ begin
   Result := Result + ' 2^' + IntToStr(LExtendedtRec.Exponent - $3ffe) + ' * ';
   Result := Result + ' $0.';
 
-  for LIndex:= 7 downto 5 do
+  for LIndex := 7 downto 5 do
     Result := Result + IntToHex(tB10(LExtendedValue)[LIndex], 2);
 end;
 
