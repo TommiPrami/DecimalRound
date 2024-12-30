@@ -374,7 +374,7 @@ begin
   else if ASingleValue = -MinSingle then
     Exit(0.00);
 
-  LExtendedValue  := ASingleValue;
+  LExtendedValue := ASingleValue;
   LExtendedtRec := TExtendedtRec(LExtendedValue);
 
   LExtendedtRec.Significand := LExtendedtRec.Significand + INC_SINGLE;
