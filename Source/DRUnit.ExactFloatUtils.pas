@@ -264,7 +264,7 @@ begin
   if AExtendedValue < 0.00 then
     Exit(-Pred(-AExtendedValue))
   else if AExtendedValue = 0.00 then
-    Exit(+MinExtended)
+    Exit(MinExtended)
   else if AExtendedValue = -MinExtended then
     Exit(0.00);
 
@@ -289,8 +289,8 @@ begin
   if AExtendedValue < 0.00 then
     Exit(-Succ(-AExtendedValue))
   else if AExtendedValue = 0.00 then
-    Exit(+MinExtended)
-  else if AExtendedValue = +MinExtended then
+    Exit(MinExtended)
+  else if AExtendedValue = MinExtended then
     Exit(0.00);
 
   LExtendedtRec := TExtendedtRec(AExtendedValue);
