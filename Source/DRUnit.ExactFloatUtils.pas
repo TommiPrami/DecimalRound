@@ -315,7 +315,7 @@ begin
   if ADoubleValue < 0.00 then
     Exit(-Pred(-ADoubleValue))
   else if ADoubleValue = 0.00 then
-    Exit(+MinDouble)
+    Exit(MinDouble)
   else if ADoubleValue = -MinDouble then
     Exit(0.00);
 
@@ -370,7 +370,7 @@ begin
   if ASingleValue < 0.00 then
     Exit(-Pred(-ASingleValue))
   else if ASingleValue = 0.00 then
-    Exit(+MinSingle)
+    Exit(MinSingle)
   else if ASingleValue = -MinSingle then
     Exit(0.00);
 
