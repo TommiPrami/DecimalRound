@@ -261,12 +261,14 @@ function Succ(const AExtendedValue: Extended): Extended;
 var
   LExtendedtRec: TExtendedtRec;
 begin
+{$WARN SYMBOL_PLATFORM OFF}
   if AExtendedValue < 0.00 then
     Exit(-Pred(-AExtendedValue))
   else if AExtendedValue = 0.00 then
     Exit(MinExtended)
   else if AExtendedValue = -MinExtended then
     Exit(0.00);
+{$WARN SYMBOL_PLATFORM ON}
 
   LExtendedtRec := TExtendedtRec(AExtendedValue);
   Inc(LExtendedtRec.Significand);
@@ -286,12 +288,14 @@ function Pred(const AExtendedValue: Extended): Extended;
 var
   LExtendedtRec: TExtendedtRec;
 begin
+{$WARN SYMBOL_PLATFORM OFF}
   if AExtendedValue < 0.00 then
     Exit(-Succ(-AExtendedValue))
   else if AExtendedValue = 0.00 then
     Exit(MinExtended)
   else if AExtendedValue = MinExtended then
     Exit(0.00);
+{$WARN SYMBOL_PLATFORM ON}
 
   LExtendedtRec := TExtendedtRec(AExtendedValue);
   Dec(LExtendedtRec.Significand);
