@@ -1,4 +1,4 @@
-Unit DecimalRounding_JH1;
+﻿Unit DecimalRounding_JH1;
 
 (* *****************************************************************************
 
@@ -12,7 +12,7 @@ Unit DecimalRounding_JH1;
   are used to determine if the input numbers are intended to represent an
   exact decimal fraction rather than a nearby value.   Thus an error limit
   will be taken into account when deciding that a number input such as
-  1.295, which internally is represented 1.29499 99999 �, really should
+  1.295, which internally is represented 1.29499 99999 …, really should
   be considered exactly 1.295 and that 0.29999 99999 ... really should
   be interpreted as 0.3 when applying the rounding rules.
 
