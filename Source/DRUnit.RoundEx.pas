@@ -58,7 +58,7 @@ begin
     LScaledError := Abs(AMaxRelativeError * AValue) / LMultiplier;
   end;
 
-  { Do the diferent basic types separately: }
+  { Do the different basic types separately: }
   case ARoundingControl of
     drcHalfEven:
       begin
