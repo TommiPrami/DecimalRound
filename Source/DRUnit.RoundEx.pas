@@ -106,7 +106,7 @@ begin
     Exit(AValue);
 {$ENDIF}
 
-  Result := InternalDecimalRoundEx(AValue, ANumberOfDecimals, MAXIMUM_RELATIVE_ERROR_SINGLE, ARoundingControl)
+  Result := InternalDecimalRoundEx(AValue, ANumberOfDecimals, MAXIMUM_RELATIVE_ERROR_SINGLE, ARoundingControl);
 end;
 
 function DecimalRoundEx(const AValue: Double; const ANumberOfDecimals: Integer;
@@ -117,7 +117,7 @@ begin
     Exit(AValue);
 {$ENDIF}
 
-  Result := InternalDecimalRoundEx(AValue, ANumberOfDecimals, MAXIMUM_RELATIVE_ERROR_DOUBLE, ARoundingControl)
+  Result := InternalDecimalRoundEx(AValue, ANumberOfDecimals, MAXIMUM_RELATIVE_ERROR_DOUBLE, ARoundingControl);
 end;
 
 {$IFDEF SUPPORTS_TRUE_EXTENDED}
@@ -129,7 +129,7 @@ begin
     Exit(AValue);
 {$ENDIF}
 
-  Result := InternalDecimalRoundEx(AValue, ANumberOfDecimals, MAXIMUM_RELATIVE_ERROR_EXTENDED, ARoundingControl)
+  Result := InternalDecimalRoundEx(AValue, ANumberOfDecimals, MAXIMUM_RELATIVE_ERROR_EXTENDED, ARoundingControl);
 end;
 {$ENDIF}
 
