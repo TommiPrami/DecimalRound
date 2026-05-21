@@ -8,12 +8,12 @@ type
   TX87InterruptBit = (ibI, ibD, ibZ, ibO, ibU, ibP, ib6, ib7);
   TX87InterruptBits = set of tX87InterruptBit;
 
-  tB10 = array [0..9] of Byte;
-  tB8 = array [0..7] of Byte;
-  tB4 = array [0..3] of Byte;
+  TB10 = array [0..9] of Byte;
+  TB8 = array [0..7] of Byte;
+  TB4 = array [0..3] of Byte;
 
-  TExtendedtRec = packed record
-    Significand: int64;
+  TExtendedRec = packed record
+    Significand: Int64;
     Exponent: Word;
   end;
 

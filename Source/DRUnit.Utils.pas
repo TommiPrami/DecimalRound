@@ -10,7 +10,9 @@ uses
   { This procedure was used to compute the Epsilon values }
   procedure CalcEpsValues(var ASingleEpsilon, ADoubleEpsilon, AExtendedEpsilon: Double);
 
-  { Each returns true if the value passed is not-a-number. }
+  { Each returns true if the value passed is not-a-number.
+    NOTE: Returns False for +Inf / -Inf (an earlier version of this routine
+    misclassified infinities as NaN). }
   function IsNan(const ASingleValue: Single): Boolean; overload; inline;
   function IsNan(const ADoubleValue: Double): Boolean; overload; inline;
 {$IFDEF SUPPORTS_TRUE_EXTENDED}
@@ -20,7 +22,7 @@ uses
   { Returns the FPU control word (which indicates interrupt masks and precision and rounding modes). }
   function GetX87CW: Word;
 
-  { Interpretes X87 control word and returns as a string. }
+  { Interprets X87 control word and returns as a string. }
   function X87CWToString(const AControlWord: Word): string;
 
   { Returns true if floating point processor (FPU) is correctly set
@@ -30,13 +32,15 @@ uses
     (3) to internally use halves-to-even (a.k.a. bankers) rounding. }
   function IsFpuCwOkForRounding: Boolean;
 
-  { This procedure loads the tDecimalRoundingCtrl descriptions and ordinals
+  { This procedure loads the TDecimalRoundingControl descriptions and ordinals
     into the string list for such use as using a TCombobox to make rounding
     type selection. }
-  procedure LoadDecimalRoundingCtrlAbbrs(const AStrings: TStrings; const AAddAbbreviotion: Boolean = True);
+  procedure LoadDecimalRoundingCtrlAbbrs(const AStrings: TStrings; const AAddAbbreviation: Boolean = True);
 
 var
-  gRoundFoatMultiplierArray: array [-ROUND_FLOAT_MAX_DECIMAL_COUNT..ROUND_FLOAT_MAX_DECIMAL_COUNT] of Extended;
+  { Lookup of 10^N. Indexed by decimal-count; negative indices mirror the
+    positive ones (callers divide by the lookup for negative N). }
+  gPowerOfTenMultipliers: array [-ROUND_FLOAT_MAX_DECIMAL_COUNT..ROUND_FLOAT_MAX_DECIMAL_COUNT] of Extended;
 
 implementation
 
@@ -47,61 +51,69 @@ uses
   For "1 - epsilon <> 1", divide these computed values by 2. }
 procedure CalcEpsValues(var ASingleEpsilon, ADoubleEpsilon, AExtendedEpsilon: Double);
 var
-  s: Single;
-  d: Double;
-  e: Extended;
-  f: Extended;
+  LSingleTest: Single;
+  LDoubleTest: Double;
+  LExtendedTest: Extended;
+  LFactor: Extended;
 begin
-  { Compute for Single, s: }
-  f := 1.00;
+  { Compute for Single: }
+  LFactor := 1.00;
   repeat
-    f := f / 2.00;
-    s := 1.00 + f / 2.00;
-  until s = 1.00;
-  ASingleEpsilon := f;
+    LFactor := LFactor / 2.00;
+    LSingleTest := 1.00 + LFactor / 2.00;
+  until LSingleTest = 1.00;
+  ASingleEpsilon := LFactor;
 
-  { Compute for Double, d: }
-  f := 1.00;
+  { Compute for Double: }
+  LFactor := 1.00;
   repeat
-    f := f / 2.00;
-    d := 1.00 + f / 2.00;
-  until d = 1.00;
-  ADoubleEpsilon := f;
+    LFactor := LFactor / 2.00;
+    LDoubleTest := 1.00 + LFactor / 2.00;
+  until LDoubleTest = 1.00;
+  ADoubleEpsilon := LFactor;
 
-  { Compute with Extended, e: }
-  f := 1.00;
+  { Compute for Extended: }
+  LFactor := 1.00;
   repeat
-    f := f / 2.00;
-    e := 1.00 + f / 2.00;
-  until e = 1.00;
+    LFactor := LFactor / 2.00;
+    LExtendedTest := 1.00 + LFactor / 2.00;
+  until LExtendedTest = 1.00;
 
-  AExtendedEpsilon := f;
+  AExtendedEpsilon := LFactor;
 end;
 
 function IsNan(const ASingleValue: Single): Boolean;
 var
-  LInputX: LongInt absolute ASingleValue;
+  LBits: LongInt absolute ASingleValue;
 begin
-  Result := (LInputX <> 0) and ((LInputX and SINGLE_EXPONENT_BITS) = SINGLE_EXPONENT_BITS);
+  { NaN: exponent bits all-ones AND mantissa non-zero.
+    Infinity also has exponent all-ones but its mantissa is zero. }
+  Result := ((LBits and SINGLE_EXPONENT_BITS) = SINGLE_EXPONENT_BITS)
+        and ((LBits and SINGLE_MANTISSA_BITS) <> 0);
 end;
 
 function IsNan(const ADoubleValue: Double): Boolean;
 var
-  LInputX: Int64 absolute ADoubleValue;
+  LBits: Int64 absolute ADoubleValue;
 begin
-  Result := (LInputX <> 0) and ((LInputX and DOUBLE_EXPONENT_BITS) = DOUBLE_EXPONENT_BITS);
+  Result := ((LBits and DOUBLE_EXPONENT_BITS) = DOUBLE_EXPONENT_BITS)
+        and ((LBits and DOUBLE_MANTISSA_BITS) <> 0);
 end;
 
 {$IFDEF SUPPORTS_TRUE_EXTENDED}
 function IsNan(const AExtendedValue: Extended): Boolean;
 var
-  LInputX: TExtendedtRec absolute AExtendedValue;
+  LBits: TExtendedRec absolute AExtendedValue;
 begin
-  Result := (LInputX.Significand <> 0) and ((LInputX.Exponent and EXTENDED_EXPONENT_BITS) = EXTENDED_EXPONENT_BITS);
+  { For 80-bit Extended the significand has an explicit leading bit (bit 63).
+    Infinity = exponent all-ones AND significand = $8000000000000000.
+    NaN     = exponent all-ones AND the lower 63 bits of the significand non-zero. }
+  Result := ((LBits.Exponent and EXTENDED_EXPONENT_BITS) = EXTENDED_EXPONENT_BITS)
+        and ((LBits.Significand and EXTENDED_SIGNIFICAND_NON_LEADING_BITS) <> 0);
 end;
 {$ENDIF}
 
-procedure LoadDecimalRoundingCtrlAbbrs(const AStrings: TStrings; const AAddAbbreviotion: Boolean = True);
+procedure LoadDecimalRoundingCtrlAbbrs(const AStrings: TStrings; const AAddAbbreviation: Boolean = True);
 var
   LRoundingControl: TDecimalRoundingControl;
 begin
@@ -109,7 +121,7 @@ begin
 
   AStrings.Clear;
   for LRoundingControl := Low(LRoundingControl) to High(LRoundingControl) do
-    if AAddAbbreviotion then
+    if AAddAbbreviation then
       AStrings.AddObject(ROUNDING_CONTROL_STRINGS[LRoundingControl].Abbreviation, Pointer(LRoundingControl))
     else
       AStrings.AddObject(ROUNDING_CONTROL_STRINGS[LRoundingControl].Description, Pointer(LRoundingControl));
@@ -139,7 +151,7 @@ begin
   Result := TX87InterruptBits(Byte(AControlWord and $00FF));
 end;
 
-{ Interpretes X87 control word and returns as a string. }
+{ Interprets X87 control word and returns as a string. }
 function X87CWToString(const AControlWord: Word): string;
 var
   LRoundingControl: TX87RoundingControl;
@@ -161,7 +173,7 @@ begin
     SetLength(Result, Length(Result) - 1);
 
   Result := 'FPU Rounding=' + X87_ROUNDING_CONTROL_STRINGS[LRoundingControl]
-    + '; Precision=' + PRECICION_CONTROL_STRINGS[LPrecisionControl]
+    + '; Precision=' + PRECISION_CONTROL_STRINGS[LPrecisionControl]
     + '; ExceptionMasks=[' + Result + '] $' + IntToHex(AControlWord, 4);
 end;
 
@@ -180,25 +192,27 @@ begin
   Result := ((LControlWord and (PC or RC or PM)) = (RC_BANKERS or PC_EXTENDED or PM));
 end;
 
-procedure InitializeRoundFloatMultiplierLookUp;
+procedure InitializePowerOfTenMultipliers;
 var
   I: Integer;
   LMultiplier: Extended;
 begin
   LMultiplier := 1.00;
 
-  gRoundFoatMultiplierArray[0] := LMultiplier;
-  for I := 1 to High(gRoundFoatMultiplierArray) do
+  gPowerOfTenMultipliers[0] := LMultiplier;
+  for I := 1 to High(gPowerOfTenMultipliers) do
   begin
     LMultiplier := LMultiplier * 10;
-    gRoundFoatMultiplierArray[I] := LMultiplier;
+    gPowerOfTenMultipliers[I] := LMultiplier;
   end;
 
-  for I := Low(gRoundFoatMultiplierArray) to -1 do
-    gRoundFoatMultiplierArray[I] := gRoundFoatMultiplierArray[Abs(I)];
+  { Negative indices mirror positive ones — callers divide by the lookup
+    instead of multiplying when ANumberOfDecimals < 0. }
+  for I := Low(gPowerOfTenMultipliers) to -1 do
+    gPowerOfTenMultipliers[I] := gPowerOfTenMultipliers[Abs(I)];
 end;
 
 initialization
-  InitializeRoundFloatMultiplierLookUp;
+  InitializePowerOfTenMultipliers;
 
 end.

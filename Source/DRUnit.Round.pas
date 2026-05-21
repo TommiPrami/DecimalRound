@@ -18,7 +18,7 @@ uses
 implementation
 
 uses
-  DRUnit.Consts, DRUnit.Utils;
+  System.Math, DRUnit.Consts, DRUnit.Utils;
 
 { The following DecimalRound function is for doing the best possible job of
   rounding floating binary point numbers to the specified NDFD.  MaxRelError
@@ -30,6 +30,11 @@ uses
     ANumberOfDecimals: Integer    Number decimal fraction digits to figure in result.
     AMaxRelativeError: Double     Maximum relative error to assume in input value.
     ARoundingControl              Optional rounding rule
+
+  NOTE: For performance, no range check is done on ANumberOfDecimals at the
+  array lookup. An Assert guards Debug builds; in Release the caller is
+  expected to pass a value within [-ROUND_FLOAT_MAX_DECIMAL_COUNT..
+  +ROUND_FLOAT_MAX_DECIMAL_COUNT].
 }
 function InternalDecimalRound(const AValue: Extended; const ANumberOfDecimals: Integer; const AMaxRelativeError: Double): Extended;
 var
@@ -39,8 +44,12 @@ var
   LScaledError: Extended;
 begin
   Assert(AMaxRelativeError > 0, 'AMaxRelativeError param in call to DecimalRound() must be greater than zero.');
+  Assert((ANumberOfDecimals >= Low(gPowerOfTenMultipliers)) and (ANumberOfDecimals <= High(gPowerOfTenMultipliers)),
+    'ANumberOfDecimals out of range for gPowerOfTenMultipliers lookup.');
+  Assert(IsFpuCwOkForRounding,
+    'FPU control word is not configured for bankers rounding / Extended precision — DecimalRound results will be off.');
 
-  LMultiplier := gRoundFoatMultiplierArray[ANumberOfDecimals];
+  LMultiplier := gPowerOfTenMultipliers[ANumberOfDecimals];
 
   if ANumberOfDecimals >= 0 then
   begin
@@ -69,8 +78,8 @@ end;
 function DecimalRound(const AValue: Single; const ANumberOfDecimals: Integer = 2): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if IsNan(AValue) then
-    Exit(AValue);
+  if DRUnit.Utils.IsNan(AValue) then
+    Exit(NaN);
 {$ENDIF}
 
   Result := InternalDecimalRound(AValue, ANumberOfDecimals, MAXIMUM_RELATIVE_ERROR_SINGLE);
@@ -79,8 +88,8 @@ end;
 function DecimalRound(const AValue: Double; const ANumberOfDecimals: Integer = 2): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if IsNan(AValue) then
-    Exit(AValue);
+  if DRUnit.Utils.IsNan(AValue) then
+    Exit(NaN);
 {$ENDIF}
 
   Result := InternalDecimalRound(AValue, ANumberOfDecimals, MAXIMUM_RELATIVE_ERROR_DOUBLE);
@@ -90,8 +99,8 @@ end;
 function DecimalRound(const AValue: Extended; const ANumberOfDecimals: Integer = 2): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if IsNan(AValue) then
-    Exit(AValue);
+  if DRUnit.Utils.IsNan(AValue) then
+    Exit(NaN);
 {$ENDIF}
 
   Result := InternalDecimalRound(AValue, ANumberOfDecimals, MAXIMUM_RELATIVE_ERROR_EXTENDED);

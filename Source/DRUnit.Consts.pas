@@ -53,6 +53,15 @@ const
   DOUBLE_EXPONENT_BITS: Int64 = $7FF0000000000000; {11 bits}
   EXTENDED_EXPONENT_BITS: Word = $7FFF; {15 bits}
 
+  { Mantissa / significand-without-leading-bit masks. NaN is identified by
+    "exponent all ones AND mantissa non-zero"; Infinity has exponent all ones
+    AND mantissa zero. The Extended significand has an explicit leading bit
+    (bit 63), so for NaN detection we mask it off and require the remaining
+    63 bits to be non-zero. }
+  SINGLE_MANTISSA_BITS: LongInt = $007FFFFF;
+  DOUBLE_MANTISSA_BITS: Int64 = $000FFFFFFFFFFFFF;
+  EXTENDED_SIGNIFICAND_NON_LEADING_BITS: Int64 = $7FFFFFFFFFFFFFFF;
+
   ROUNDING_CONTROL_STRINGS: array [TDecimalRoundingControl] of
       record
         Abbreviation: string;
@@ -93,14 +102,16 @@ const {define long names}
   ibPrecision = ibP;
 
   X87_ROUNDING_CONTROL_STRINGS: array [TX87RoundingControl] of string = ('bankers', 'floor', 'ceil', 'chop');
-  PRECICION_CONTROL_STRINGS: array [TX87PrecisionControl] of string = ('single', 'reserved', 'double', 'extended');
+  PRECISION_CONTROL_STRINGS: array [TX87PrecisionControl] of string = ('single', 'reserved', 'double', 'extended');
   INTERRUPT_MASK_STRINGS: array [TX87InterruptBit] of string = ('IM', 'DM', 'ZM', 'OM', 'UM', 'PM', 'm6', 'm7');
   INTERRUPT_STATUS_STRINGS: array [TX87InterruptBit] of string = ('IE', 'DE', 'ZE', 'OE', 'UE', 'PE', 'e6', 'e7');
 
   DIGITS: array [0..9] of Char = '0123456789';
 
   NUMBER_OF_BITS_TO_CLEAR = 8;
-  MASK: int64 = $FFFFFFFFFFFFFFFF shr NUMBER_OF_BITS_TO_CLEAR;
+  { Low 56 bits set; equivalent to ($FFFFFFFFFFFFFFFF shr NUMBER_OF_BITS_TO_CLEAR)
+    but expressed as a literal so the value is obvious at a glance. }
+  MASK: Int64 = $00FFFFFFFFFFFFFF;
 
   INC_DOUBLE = $1000;
   INC_SINGLE = $10000000000;

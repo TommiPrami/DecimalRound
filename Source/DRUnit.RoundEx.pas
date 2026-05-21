@@ -21,7 +21,7 @@ uses
 implementation
 
 uses
-  DRUnit.Consts, DRUnit.Utils;
+  System.Math, DRUnit.Consts, DRUnit.Utils;
 
 { The following DecimalRound function is for doing the best possible job of
   rounding floating binary point numbers to the specified NDFD.  MaxRelError
@@ -33,19 +33,29 @@ uses
     ANumberOfDecimals: Integer    Number decimal fraction digits to figure in result.
     AMaxRelativeError: Double     Maximum relative error to assume in input value.
     ARoundingControl              Optional rounding rule
+
+  NOTE: For performance, no range check is done on ANumberOfDecimals at the
+  array lookup. An Assert guards Debug builds; in Release the caller is
+  expected to pass a value within [-ROUND_FLOAT_MAX_DECIMAL_COUNT..
+  +ROUND_FLOAT_MAX_DECIMAL_COUNT].
 }
 function InternalDecimalRoundEx(const AValue: Extended; const ANumberOfDecimals: Integer; const AMaxRelativeError: Double;
   const ARoundingControl: TDecimalRoundingControl = drcHalfUp): Extended;
 var
   LInt64Value: Int64;
-  LInt64ValueEven: Int64;
+  LCandidateLow: Int64;
+  LCandidateHigh: Int64;
   LMultiplier: Extended;
   LScaledValue: Extended;
   LScaledError: Extended;
 begin
   Assert(AMaxRelativeError > 0, 'AMaxRelativeError param in call to DecimalRound() must be greater than zero.');
+  Assert((ANumberOfDecimals >= Low(gPowerOfTenMultipliers)) and (ANumberOfDecimals <= High(gPowerOfTenMultipliers)),
+    'ANumberOfDecimals out of range for gPowerOfTenMultipliers lookup.');
+  Assert(IsFpuCwOkForRounding,
+    'FPU control word is not configured for bankers rounding / Extended precision — DecimalRoundEx results will be off.');
 
-  LMultiplier := gRoundFoatMultiplierArray[ANumberOfDecimals];
+  LMultiplier := gPowerOfTenMultipliers[ANumberOfDecimals];
 
   if ANumberOfDecimals >= 0 then
   begin
@@ -62,11 +72,18 @@ begin
   case ARoundingControl of
     drcHalfEven:
       begin
-        LInt64Value := Round(LScaledValue - LScaledError);
-        LInt64ValueEven := Round(LScaledValue + LScaledError);
+        { Bankers rounding: try the low and high edges of the epsilon band.
+          If the lower candidate is odd, the value is effectively on a halfway
+          point — the upper candidate (under the FPU's bankers rounding mode,
+          which IsFpuCwOkForRounding asserts) will land on the even integer.
+          Otherwise the lower candidate already is the nearest. }
+        LCandidateLow := Round(LScaledValue - LScaledError);
+        LCandidateHigh := Round(LScaledValue + LScaledError);
 
-        if Odd(LInt64Value) then
-          LInt64Value := LInt64ValueEven;
+        if Odd(LCandidateLow) then
+          LInt64Value := LCandidateHigh
+        else
+          LInt64Value := LCandidateLow;
       end;
     drcHalfDown:  {Round to nearest or toward zero.}
       LInt64Value := Round((Abs(LScaledValue) - LScaledError));
@@ -102,7 +119,9 @@ function DecimalRoundEx(const AValue: Single; const ANumberOfDecimals: Integer;
   const ARoundingControl: TDecimalRoundingControl = drcHalfUp): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if IsNan(AValue) or (ARoundingControl = drcNone) then
+  if DRUnit.Utils.IsNan(AValue) then
+    Exit(NaN)
+  else if ARoundingControl = drcNone then
     Exit(AValue);
 {$ENDIF}
 
@@ -113,7 +132,9 @@ function DecimalRoundEx(const AValue: Double; const ANumberOfDecimals: Integer;
   const ARoundingControl: TDecimalRoundingControl = drcHalfUp): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if IsNan(AValue) or (ARoundingControl = drcNone) then
+  if DRUnit.Utils.IsNan(AValue) then
+    Exit(NaN)
+  else if ARoundingControl = drcNone then
     Exit(AValue);
 {$ENDIF}
 
@@ -125,7 +146,9 @@ function DecimalRoundEx(const AValue: Extended; const ANumberOfDecimals: Integer
   const ARoundingControl: TDecimalRoundingControl = drcHalfUp): Extended;
 begin
 {$IFDEF DO_CHECKS}
-  if IsNan(AValue) or (ARoundingControl = drcNone) then
+  if DRUnit.Utils.IsNan(AValue) then
+    Exit(NaN)
+  else  if ARoundingControl = drcNone then
     Exit(AValue);
 {$ENDIF}
 

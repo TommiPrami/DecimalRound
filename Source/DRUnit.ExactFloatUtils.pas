@@ -22,13 +22,16 @@ interface
   function UnpackFloatToStr(var ADoubleValue: Double): string; overload;
   function UnpackFloatToStr(var ASingleValue: Single): string; overload;
 
-  function Succ(const AExtendedValue: Extended): Extended; overload;
-  function Succ(const ADoubleValue: Double): Double; overload;
-  function Succ(const ASingleValue: Single): Single; overload;
+  { Successor / predecessor in the floating-point sense: returns the next
+    (or previous) representable value. Renamed from Succ/Pred to avoid
+    shadowing the system intrinsics. }
+  function NextFloat(const AExtendedValue: Extended): Extended; overload;
+  function NextFloat(const ADoubleValue: Double): Double; overload;
+  function NextFloat(const ASingleValue: Single): Single; overload;
 
-  function Pred(const AExtendedValue: Extended): Extended; overload;
-  function Pred(const ADoubleValue: Double): Double; overload;
-  function Pred(const ASingleValue: Single): Single; overload;
+  function PrevFloat(const AExtendedValue: Extended): Extended; overload;
+  function PrevFloat(const ADoubleValue: Double): Double; overload;
+  function PrevFloat(const ASingleValue: Single): Single; overload;
 
 implementation
 
@@ -43,43 +46,43 @@ function ExactFloatToStr(const AExtendedValue: Extended; const ASpaceInterval: I
   end;
 
 var
-  LSignificand,
-  wn: Int64;
-  dd: Int64;
-  m: Int64;
+  LSignificand: Int64;
+  LWholePart: Int64;
+  LFractionAcc: Int64;
+  LDivisor: Int64;
   LExponent: Integer;
-  d: Integer;
+  LDigit: Integer;
   LIndex: Integer;
   LSeparatorIndex: Integer;
   LNegative: Boolean;
-  LExtendedtRec: TExtendedtRec;
+  LExtendedRec: TExtendedRec;
 begin
   if AExtendedValue = 0.00 then
     Exit('0');
 
-  { Cast to exp and significant parts in "ER": }
-  LExtendedtRec := TExtendedtRec(AExtendedValue);
-  LSignificand := LExtendedtRec.Significand;
-  LExponent := (LExtendedtRec.Exponent and $7FFF) - $4000;
-  LNegative := (LExtendedtRec.Exponent and $8000) <> 0;
+  { Cast to exponent and significand parts: }
+  LExtendedRec := TExtendedRec(AExtendedValue);
+  LSignificand := LExtendedRec.Significand;
+  LExponent := (LExtendedRec.Exponent and $7FFF) - $4000;
+  LNegative := (LExtendedRec.Exponent and $8000) <> 0;
 
   if LNegative then
     Result := '-' else Result := '+';
 
-  { Shift out whole number part into "wn": }
-  wn := 0;
+  { Shift out whole number part into LWholePart: }
+  LWholePart := 0;
   while LExponent > -2 do
   begin
     Dec(LExponent);
-    wn := (wn shl 1);
+    LWholePart := (LWholePart shl 1);
 
     if (LSignificand and $8000000000000000) <> 0 then
-      wn := wn or 1;
+      LWholePart := LWholePart or 1;
 
     LSignificand := LSignificand shl 1;
   end;
 
-  Result := Result + IntToStr(wn);
+  Result := Result + IntToStr(LWholePart);
 
   if ASpaceInterval > 0 then
   begin
@@ -95,38 +98,39 @@ begin
   { Multiply out the fraction part }
   Result := Result + '.';
 
-  { Make "dd" holder for the top byte of Exponent: }
+  { LFractionAcc holds the top byte of the running significand; LDivisor is
+    the place value used to extract one decimal digit per iteration. }
   LIndex := NUMBER_OF_BITS_TO_CLEAR - 2 - LExponent;
 
   if LIndex > 64 - 4 then
     RaiseNumberTooSmallException;
 
-  m := 1;
-  m := m shl LIndex;
-  dd := LSignificand shr (64 - NUMBER_OF_BITS_TO_CLEAR);
+  LDivisor := 1;
+  LDivisor := LDivisor shl LIndex;
+  LFractionAcc := LSignificand shr (64 - NUMBER_OF_BITS_TO_CLEAR);
   LSignificand := LSignificand and MASK;
 
   LSeparatorIndex := 0;
-  while (LSignificand <> 0) or (dd <> 0) do
+  while (LSignificand <> 0) or (LFractionAcc <> 0) do
   begin
-    { Mul sig and dd by 10 }
-    dd  := dd * 10;
+    { Multiply significand and accumulator by 10. }
+    LFractionAcc := LFractionAcc * 10;
     LSignificand := LSignificand * 10;
 
-    { Remove new stuff in top byte of sig to dd }
-    dd := dd + LSignificand shr (64 - 8);
+    { Shift the new top byte of the significand into the accumulator. }
+    LFractionAcc := LFractionAcc + LSignificand shr (64 - 8);
     LSignificand := LSignificand and MASK;
 
-    { Remove whole number part from "dd" to "d" }
-    d  := dd div m;
-    dd := dd mod m;
+    { Extract the next decimal digit from the accumulator. }
+    LDigit := LFractionAcc div LDivisor;
+    LFractionAcc := LFractionAcc mod LDivisor;
 
     if (ASpaceInterval > 0) and (LSeparatorIndex > 0) and ((LSeparatorIndex mod ASpaceInterval) = 0) then
       Result := Result + ' ';
 
     Inc(LSeparatorIndex);
 
-    Result := Result + Char(Ord('0') + d);
+    Result := Result + Char(Ord('0') + LDigit);
   end;
 end;
 
@@ -139,9 +143,9 @@ begin
   for  LIndex := 0 to SizeOf(AExtendedValue) - 1 do
   begin
     if ALittleEndian then
-      Result := Result + IntToHex(tB10(AExtendedValue)[LIndex], 2)
+      Result := Result + IntToHex(TB10(AExtendedValue)[LIndex], 2)
     else
-      Result := IntToHex(tB10(AExtendedValue)[LIndex], 2) + Result;
+      Result := IntToHex(TB10(AExtendedValue)[LIndex], 2) + Result;
   end;
 end;
 
@@ -154,7 +158,7 @@ begin
   for LIndex := 0 to SizeOf(ADoubleValue) - 1 do
   begin
     if ALittleEndian then
-      Result := Result + IntToHex(tB8(ADoubleValue)[LIndex], 2)
+      Result := Result + IntToHex(TB8(ADoubleValue)[LIndex], 2)
     else
       Result := IntToHex(TB8(ADoubleValue)[LIndex], 2) + Result;
   end;
@@ -169,9 +173,9 @@ begin
   for LIndex := 0 to SizeOf(ASingleValue) - 1 do
   begin
     if ALittleEndian then
-      Result := Result + IntToHex(tB4(ASingleValue)[LIndex], 2)
+      Result := Result + IntToHex(TB4(ASingleValue)[LIndex], 2)
     else
-      Result := IntToHex(tB4(ASingleValue)[LIndex], 2) + Result;
+      Result := IntToHex(TB4(ASingleValue)[LIndex], 2) + Result;
     end;
 end;
 
@@ -179,7 +183,7 @@ function UnpackFloatToStr(var AExtendedValue: Extended): string; overload;
 var
   LNegative: Boolean;
   LIndex: Integer;
-  LExtendedtRec: TExtendedtRec;
+  LExtendedRec: TExtendedRec;
   LExtendedValue: Extended;
 begin
   LExtendedValue := AExtendedValue;
@@ -193,9 +197,9 @@ begin
   else
     Result := '+';
 
-  LExtendedtRec := TExtendedtRec(LExtendedValue);
+  LExtendedRec := TExtendedRec(LExtendedValue);
 
-  Result := Result + ' 2^' + IntToStr(LExtendedtRec.Exponent - $3ffe) + ' * $0.';
+  Result := Result + ' 2^' + IntToStr(LExtendedRec.Exponent - $3ffe) + ' * $0.';
 
   for LIndex := 7 downto 0 do
     Result := Result + IntToHex(TB10(LExtendedValue)[LIndex], 2);
@@ -205,7 +209,7 @@ function UnpackFloatToStr(var ADoubleValue: Double): string; overload;
 var
   LNegative: Boolean;
   LIndex: Integer;
-  LExtendedtRec: TExtendedtRec;
+  LExtendedRec: TExtendedRec;
   LExtendedValue: Extended;
 begin
   LExtendedValue := ADoubleValue;
@@ -219,13 +223,13 @@ begin
   else
     Result := '+';
 
-  LExtendedtRec := TExtendedtRec(LExtendedValue);
+  LExtendedRec := TExtendedRec(LExtendedValue);
 
-  Result := Result + ' 2^' + IntToStr(LExtendedtRec.Exponent - $3ffe) + ' * ';
+  Result := Result + ' 2^' + IntToStr(LExtendedRec.Exponent - $3ffe) + ' * ';
   Result := Result + ' $0.';
 
   for LIndex := 7 downto 1 do
-    Result := Result + IntToHex(tB10(LExtendedValue)[LIndex], 2);
+    Result := Result + IntToHex(TB10(LExtendedValue)[LIndex], 2);
 
   SetLength(Result, Length(Result) - 1);
 end;
@@ -234,7 +238,7 @@ function UnpackFloatToStr(var ASingleValue: Single): string; overload;
 var
   LNegative: Boolean;
   LIndex: Integer;
-  LExtendedtRec: TExtendedtRec;
+  LExtendedRec: TExtendedRec;
   LExtendedValue: Extended;
 begin
   LExtendedValue := ASingleValue;
@@ -248,178 +252,178 @@ begin
   else
     Result := '+';
 
-  LExtendedtRec := TExtendedtRec(LExtendedValue);
+  LExtendedRec := TExtendedRec(LExtendedValue);
 
-  Result := Result + ' 2^' + IntToStr(LExtendedtRec.Exponent - $3ffe) + ' * ';
+  Result := Result + ' 2^' + IntToStr(LExtendedRec.Exponent - $3ffe) + ' * ';
   Result := Result + ' $0.';
 
   for LIndex := 7 downto 5 do
-    Result := Result + IntToHex(tB10(LExtendedValue)[LIndex], 2);
+    Result := Result + IntToHex(TB10(LExtendedValue)[LIndex], 2);
 end;
 
-function Succ(const AExtendedValue: Extended): Extended;
+function NextFloat(const AExtendedValue: Extended): Extended;
 var
-  LExtendedtRec: TExtendedtRec;
+  LExtendedRec: TExtendedRec;
 begin
 {$WARN SYMBOL_PLATFORM OFF}
   if AExtendedValue < 0.00 then
-    Exit(-Pred(-AExtendedValue))
+    Exit(-PrevFloat(-AExtendedValue))
   else if AExtendedValue = 0.00 then
     Exit(MinExtended)
   else if AExtendedValue = -MinExtended then
     Exit(0.00);
 {$WARN SYMBOL_PLATFORM ON}
 
-  LExtendedtRec := TExtendedtRec(AExtendedValue);
-  Inc(LExtendedtRec.Significand);
+  LExtendedRec := TExtendedRec(AExtendedValue);
+  Inc(LExtendedRec.Significand);
 
-  Assert(LExtendedtRec.Significand <> 0);
+  Assert(LExtendedRec.Significand <> 0);
 
-  if LExtendedtRec.Significand = 0 then
+  if LExtendedRec.Significand = 0 then
   begin
-    LExtendedtRec.Significand := $8000000000000000;
-    LExtendedtRec.Exponent := LExtendedtRec.Exponent + 1;
+    LExtendedRec.Significand := $8000000000000000;
+    LExtendedRec.Exponent := LExtendedRec.Exponent + 1;
   end;
 
-  Result := Extended(LExtendedtRec);
+  Result := Extended(LExtendedRec);
 end;
 
-function Pred(const AExtendedValue: Extended): Extended;
+function PrevFloat(const AExtendedValue: Extended): Extended;
 var
-  LExtendedtRec: TExtendedtRec;
+  LExtendedRec: TExtendedRec;
 begin
 {$WARN SYMBOL_PLATFORM OFF}
   if AExtendedValue < 0.00 then
-    Exit(-Succ(-AExtendedValue))
+    Exit(-NextFloat(-AExtendedValue))
   else if AExtendedValue = 0.00 then
-    Exit(MinExtended)
+    Exit(-MinExtended)
   else if AExtendedValue = MinExtended then
     Exit(0.00);
 {$WARN SYMBOL_PLATFORM ON}
 
-  LExtendedtRec := TExtendedtRec(AExtendedValue);
-  Dec(LExtendedtRec.Significand);
+  LExtendedRec := TExtendedRec(AExtendedValue);
+  Dec(LExtendedRec.Significand);
 
-  Assert(LExtendedtRec.Significand <> 0.00);
+  Assert(LExtendedRec.Significand <> 0.00);
 
-  While (LExtendedtRec.Significand <> 0) and ((LExtendedtRec.Significand and $8000000000000000) = 0) do
+  While (LExtendedRec.Significand <> 0) and ((LExtendedRec.Significand and $8000000000000000) = 0) do
   begin
-    LExtendedtRec.Significand := LExtendedtRec.Significand shl 1;
-    LExtendedtRec.Exponent := LExtendedtRec.Exponent - 1;
+    LExtendedRec.Significand := LExtendedRec.Significand shl 1;
+    LExtendedRec.Exponent := LExtendedRec.Exponent - 1;
   end;
 
-  Result := Extended(LExtendedtRec);
+  Result := Extended(LExtendedRec);
 end;
 
-function Succ(const ADoubleValue: Double): Double;
+function NextFloat(const ADoubleValue: Double): Double;
 var
-  LExtendedtRec: TExtendedtRec;
+  LExtendedRec: TExtendedRec;
   LExtendedValue: Extended;
 begin
   if ADoubleValue < 0.00 then
-    Exit(-Pred(-ADoubleValue))
+    Exit(-PrevFloat(-ADoubleValue))
   else if ADoubleValue = 0.00 then
     Exit(MinDouble)
   else if ADoubleValue = -MinDouble then
     Exit(0.00);
 
   LExtendedValue := ADoubleValue;
-  LExtendedtRec := TExtendedtRec(LExtendedValue);
-  LExtendedtRec.Significand := LExtendedtRec.Significand + INC_DOUBLE;
+  LExtendedRec := TExtendedRec(LExtendedValue);
+  LExtendedRec.Significand := LExtendedRec.Significand + INC_DOUBLE;
 
-  Assert(LExtendedtRec.Significand <> 0);
+  Assert(LExtendedRec.Significand <> 0);
 
-  if (LExtendedtRec.Significand and $8000000000000000) = 0 then
+  if (LExtendedRec.Significand and $8000000000000000) = 0 then
   begin
-    LExtendedtRec.Significand := LExtendedtRec.Significand shr 1 or $8000000000000000;
-    LExtendedtRec.Exponent := LExtendedtRec.Exponent + 1;
+    LExtendedRec.Significand := LExtendedRec.Significand shr 1 or $8000000000000000;
+    LExtendedRec.Exponent := LExtendedRec.Exponent + 1;
   end;
 
-  Result := Extended(LExtendedtRec);
+  Result := Extended(LExtendedRec);
 end;
 
-function Pred(const ADoubleValue: Double): Double;
+function PrevFloat(const ADoubleValue: Double): Double;
 var
-  LExtendedtRec: TExtendedtRec;
+  LExtendedRec: TExtendedRec;
   LExtendedValue: Extended;
 begin
   if ADoubleValue < 0 then
-    Exit(-Succ(-ADoubleValue))
+    Exit(-NextFloat(-ADoubleValue))
   else if ADoubleValue = 0 then
     Exit(-MinDouble)
   else if ADoubleValue = +MinDouble then
     Exit(0.00);
 
   LExtendedValue := ADoubleValue;
-  LExtendedtRec := TExtendedtRec(LExtendedValue);
+  LExtendedRec := TExtendedRec(LExtendedValue);
 
-  LExtendedtRec.Significand := LExtendedtRec.Significand - INC_DOUBLE;
+  LExtendedRec.Significand := LExtendedRec.Significand - INC_DOUBLE;
 
-  Assert(LExtendedtRec.Significand <> 0);
+  Assert(LExtendedRec.Significand <> 0);
 
-  while (LExtendedtRec.Significand <> 0) and ((LExtendedtRec.Significand and $8000000000000000) = 0) do
+  while (LExtendedRec.Significand <> 0) and ((LExtendedRec.Significand and $8000000000000000) = 0) do
   begin
-    LExtendedtRec.Significand := LExtendedtRec.Significand shl 1;
-    LExtendedtRec.Exponent := LExtendedtRec.Exponent - 1;
+    LExtendedRec.Significand := LExtendedRec.Significand shl 1;
+    LExtendedRec.Exponent := LExtendedRec.Exponent - 1;
   end;
 
-  Result := Extended(LExtendedtRec);
+  Result := Extended(LExtendedRec);
 end;
 
-function Succ(const ASingleValue: Single): Single;
+function NextFloat(const ASingleValue: Single): Single;
 var
-  LExtendedtRec: TExtendedtRec;
+  LExtendedRec: TExtendedRec;
   LExtendedValue: Extended;
 begin
   if ASingleValue < 0.00 then
-    Exit(-Pred(-ASingleValue))
+    Exit(-PrevFloat(-ASingleValue))
   else if ASingleValue = 0.00 then
     Exit(MinSingle)
   else if ASingleValue = -MinSingle then
     Exit(0.00);
 
   LExtendedValue := ASingleValue;
-  LExtendedtRec := TExtendedtRec(LExtendedValue);
+  LExtendedRec := TExtendedRec(LExtendedValue);
 
-  LExtendedtRec.Significand := LExtendedtRec.Significand + INC_SINGLE;
+  LExtendedRec.Significand := LExtendedRec.Significand + INC_SINGLE;
 
-  Assert(LExtendedtRec.Significand <> 0);
+  Assert(LExtendedRec.Significand <> 0);
 
-  if (LExtendedtRec.Significand and $8000000000000000) = 0 then
+  if (LExtendedRec.Significand and $8000000000000000) = 0 then
   begin
-    LExtendedtRec.Significand := LExtendedtRec.Significand shr 1 or $8000000000000000;
-    LExtendedtRec.Exponent := LExtendedtRec.Exponent + 1;
+    LExtendedRec.Significand := LExtendedRec.Significand shr 1 or $8000000000000000;
+    LExtendedRec.Exponent := LExtendedRec.Exponent + 1;
   end;
 
-  Result := Extended(LExtendedtRec);
+  Result := Extended(LExtendedRec);
 end;
 
-function Pred(const ASingleValue: Single): Single;
+function PrevFloat(const ASingleValue: Single): Single;
 var
-  LExtendedtRec: TExtendedtRec;
+  LExtendedRec: TExtendedRec;
   LExtendedValue: Extended;
 begin
   if ASingleValue < 0.00 then
-    Exit(-Succ(-ASingleValue))
+    Exit(-NextFloat(-ASingleValue))
   else if ASingleValue = 0.00 then
     Exit(-MinSingle)
   else if ASingleValue = +MinSingle then
     Exit(0.00);
 
   LExtendedValue := ASingleValue;
-  LExtendedtRec := TExtendedtRec(LExtendedValue);
+  LExtendedRec := TExtendedRec(LExtendedValue);
 
-  LExtendedtRec.Significand := LExtendedtRec.Significand - INC_SINGLE;
+  LExtendedRec.Significand := LExtendedRec.Significand - INC_SINGLE;
 
-  Assert(LExtendedtRec.Significand <> 0);
+  Assert(LExtendedRec.Significand <> 0);
 
-  while (LExtendedtRec.Significand <> 0) and ((LExtendedtRec.Significand and $8000000000000000) = 0) do
+  while (LExtendedRec.Significand <> 0) and ((LExtendedRec.Significand and $8000000000000000) = 0) do
   begin
-    LExtendedtRec.Significand := LExtendedtRec.Significand shl 1;
-    LExtendedtRec.Exponent := LExtendedtRec.Exponent - 1;
+    LExtendedRec.Significand := LExtendedRec.Significand shl 1;
+    LExtendedRec.Exponent := LExtendedRec.Exponent - 1;
   end;
 
-  Result := Extended(LExtendedtRec);
+  Result := Extended(LExtendedRec);
 end;
 
 end.
