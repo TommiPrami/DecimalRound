@@ -2,7 +2,7 @@
 
 interface
 
-{$INCLUDE DR.inc}
+{$INCLUDE DecimalRound.inc}
 
 uses
   DRUnit.Types;

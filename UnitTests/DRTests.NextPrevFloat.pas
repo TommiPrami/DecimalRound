@@ -46,7 +46,7 @@ type
 implementation
 
 uses
-  System.Math, DRUnit.ExactFloatUtils;
+  System.SysUtils, System.Math, DRUnit.ExactFloatUtils;
 
 { ----------------------------------------------------------- PrevFloat(0) }
 

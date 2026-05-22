@@ -9,7 +9,7 @@
 interface
 
 uses
-  DUnitX.TestFramework;
+  DUnitX.TestFramework, DRUnit.Consts, DRUnit.Types;
 
 type
   [TestFixture]

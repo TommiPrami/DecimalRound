@@ -2,7 +2,7 @@
 
 interface
 
-{$INCLUDE DR.inc}
+{$INCLUDE DecimalRound.inc}
 
 uses
   System.Classes, DRUnit.Consts;
@@ -203,6 +203,7 @@ begin
   LMultiplier := 1.00;
 
   gPowerOfTenMultipliers[0] := LMultiplier;
+
   for I := 1 to High(gPowerOfTenMultipliers) do
   begin
     LMultiplier := LMultiplier * 10;
