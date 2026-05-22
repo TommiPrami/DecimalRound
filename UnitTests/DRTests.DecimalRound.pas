@@ -67,38 +67,38 @@ type
 implementation
 
 uses
-  System.Math, System.SysUtils, DRUnit.Round;
+  System.Math, System.SysUtils, DRUnit.Consts, DRUnit.Round;
 
 { ----------------------------------------------------- Basic correctness }
 
 procedure TDecimalRoundTests.Zero_RoundsToZero;
 begin
-  Assert.AreEqual<Extended>(0.0, DecimalRound(Double(0.0), 2));
-  Assert.AreEqual<Extended>(0.0, DecimalRound(Single(0.0), 2));
+  Assert.AreEqual(0.0, DecimalRound(Double(0.0), 2), EPSILON_DOUBLE);
+  Assert.AreEqual(0.0, DecimalRound(Single(0.0), 2), EPSILON_SINGLE);
 end;
 
 procedure TDecimalRoundTests.PositiveValue_RoundedToTwoDecimals;
 begin
-  Assert.AreEqual<Extended>(1.23, DecimalRound(Double(1.234), 2));
-  Assert.AreEqual<Extended>(1.24, DecimalRound(Double(1.235), 2));
+  Assert.AreEqual(1.23, DecimalRound(Double(1.234), 2), EPSILON_DOUBLE);
+  Assert.AreEqual(1.24, DecimalRound(Double(1.235), 2), EPSILON_DOUBLE);
 end;
 
 procedure TDecimalRoundTests.NegativeValue_RoundedToTwoDecimals;
 begin
-  Assert.AreEqual<Extended>(-1.23, DecimalRound(Double(-1.234), 2));
-  Assert.AreEqual<Extended>(-1.24, DecimalRound(Double(-1.235), 2));
+  Assert.AreEqual(-1.23, DecimalRound(Double(-1.234), 2), EPSILON_DOUBLE);
+  Assert.AreEqual(-1.24, DecimalRound(Double(-1.235), 2), EPSILON_DOUBLE);
 end;
 
 procedure TDecimalRoundTests.DefaultDecimalCount_IsTwo;
 begin
-  Assert.AreEqual<Extended>(2.25, DecimalRound(Double(2.245)));
+  Assert.AreEqual(2.25, DecimalRound(Double(2.245)), EPSILON_DOUBLE);
 end;
 
 procedure TDecimalRoundTests.ZeroDecimals_RoundsToInteger;
 begin
-  Assert.AreEqual<Extended>(2.0, DecimalRound(Double(1.5), 0));
-  Assert.AreEqual<Extended>(2.0, DecimalRound(Double(2.4), 0));
-  Assert.AreEqual<Extended>(3.0, DecimalRound(Double(2.6), 0));
+  Assert.AreEqual(2.0, DecimalRound(Double(1.5), 0), EPSILON_DOUBLE);
+  Assert.AreEqual(2.0, DecimalRound(Double(2.4), 0), EPSILON_DOUBLE);
+  Assert.AreEqual(3.0, DecimalRound(Double(2.6), 0), EPSILON_DOUBLE);
 end;
 
 procedure TDecimalRoundTests.LargeValues_ManualTests;
@@ -170,9 +170,9 @@ end;
 procedure TDecimalRoundTests.NegativeDecimals_RoundsToTens;
 begin
   { ANumberOfDecimals = -1 means round to nearest 10. }
-  Assert.AreEqual<Extended>(120.0, DecimalRound(Double(123.4), -1));
-  Assert.AreEqual<Extended>(130.0, DecimalRound(Double(125.0), -1));
-  Assert.AreEqual<Extended>(100.0, DecimalRound(Double(123.4), -2));
+  Assert.AreEqual(120.0, DecimalRound(Double(123.4), -1), EPSILON_DOUBLE);
+  Assert.AreEqual(130.0, DecimalRound(Double(125.0), -1), EPSILON_DOUBLE);
+  Assert.AreEqual(100.0, DecimalRound(Double(123.4), -2), EPSILON_DOUBLE);
 end;
 
 { ----------------------------------------------- Hard-to-round classics }
@@ -180,23 +180,22 @@ end;
 procedure TDecimalRoundTests.Tricky_2_245_Rounds_To_2_25;
 begin
   { Plain RTL Round(2.245 * 100) / 100 famously yields 2.24. }
-  Assert.AreEqual<Extended>(2.25, DecimalRound(Double(2.245), 2),
-    'DecimalRound(2.245) must produce 2.25');
+  Assert.AreEqual(2.25, DecimalRound(Double(2.245), 2), EPSILON_DOUBLE, 'DecimalRound(2.245) must produce 2.25');
 end;
 
 procedure TDecimalRoundTests.Tricky_1_015_Times_100_Rounds_To_101_5;
 begin
-  Assert.AreEqual<Extended>(101.5, DecimalRound(Double(1.015 * 100.0), 1));
+  Assert.AreEqual(101.5, DecimalRound(Double(1.015 * 100.0), 1), EPSILON_DOUBLE);
 end;
 
 procedure TDecimalRoundTests.Tricky_3_015_Times_100_Rounds_To_301_5;
 begin
-  Assert.AreEqual<Extended>(301.5, DecimalRound(Double(3.015 * 100.0), 1));
+  Assert.AreEqual(301.5, DecimalRound(Double(3.015 * 100.0), 1), EPSILON_DOUBLE);
 end;
 
 procedure TDecimalRoundTests.Tricky_Negative_2_245_Rounds_To_Minus_2_25;
 begin
-  Assert.AreEqual<Extended>(-2.25, DecimalRound(Double(-2.245), 2));
+  Assert.AreEqual(-2.25, DecimalRound(Double(-2.245), 2), EPSILON_DOUBLE);
 end;
 
 { --------------------------------------------- Tricky real-world cases }
@@ -210,31 +209,34 @@ end;
   AssertRound_E : evaluates the source expression in Extended precision and
                   calls the Extended overload. Only compiled on x86. }
 
-procedure AssertRound_D(const AExpected, AActual: Double;
-  const AMsg: string = '');
+procedure AssertRound_D(const AExpected, AActual: Double; const AMsg: string = '');
 begin
-  Assert.AreEqual(AExpected, AActual, 0.0, AMsg);
+  Assert.AreEqual(AExpected, AActual, EPSILON_DOUBLE, AMsg);
 end;
 
 {$IFDEF SUPPORTS_TRUE_EXTENDED}
-procedure AssertRound_E(const AExpected, AActual: Extended;
-  const AMsg: string = '');
+procedure AssertRound_E(const AExpected, AActual: Extended; const AMsg: string = '');
 begin
-  Assert.AreEqual<Extended>(AExpected, AActual, AMsg);
+  Assert.AreEqual(AExpected, AActual, EPSILON_EXTENDED, AMsg);
 end;
 {$ENDIF}
 
 { ------- Multiplications_By_0_045 ------- }
 
 procedure TDecimalRoundTrickyCases.Multiplications_By_0_045_Double;
-{ These (integer * 0.045) multiplications used to break our previous
-  basic rounding routine. }
 var
   V: Double;
 begin
-  V := 85 * 0.045;          AssertRound_D(3.83,  DecimalRound(V), '85 * 0.045');
-  V := 85 * -0.045;         AssertRound_D(-3.83, DecimalRound(V), '85 * -0.045');
-  V := 1047 * 0.045000;     AssertRound_D(47.12, DecimalRound(V), '1047 * 0.045000');
+  { These (integer * 0.045) multiplications used to break our previous basic rounding routine. }
+
+  V := 85 * 0.045;
+  AssertRound_D(3.83,  DecimalRound(V), '85 * 0.045');
+
+  V := 85 * -0.045;
+  AssertRound_D(-3.83, DecimalRound(V), '85 * -0.045');
+
+  V := 1047 * 0.045000;
+  AssertRound_D(47.12, DecimalRound(V), '1047 * 0.045000');
 end;
 
 {$IFDEF SUPPORTS_TRUE_EXTENDED}
@@ -242,9 +244,14 @@ procedure TDecimalRoundTrickyCases.Multiplications_By_0_045_Extended;
 var
   V: Extended;
 begin
-  V := 85 * 0.045;          AssertRound_E(3.83,  DecimalRound(V), '85 * 0.045');
-  V := 85 * -0.045;         AssertRound_E(-3.83, DecimalRound(V), '85 * -0.045');
-  V := 1047 * 0.045000;     AssertRound_E(47.12, DecimalRound(V), '1047 * 0.045000');
+  V := 85 * 0.045;
+  AssertRound_E(3.83,  DecimalRound(V), '85 * 0.045');
+
+  V := 85 * -0.045;
+  AssertRound_E(-3.83, DecimalRound(V), '85 * -0.045');
+
+  V := 1047 * 0.045000;
+  AssertRound_E(47.12, DecimalRound(V), '1047 * 0.045000');
 end;
 {$ENDIF}
 
@@ -258,24 +265,55 @@ procedure TDecimalRoundTrickyCases.Multiplications_By_Large_X_045_Double;
 var
   V: Double;
 begin
-  V := 85 * 1000.045;            AssertRound_D(85003.83,         DecimalRound(V), '85 * 1000.045');
-  V := 85 * -1000.045;           AssertRound_D(-85003.83,        DecimalRound(V), '85 * -1000.045');
-  V := 85 * 10000.045;           AssertRound_D(850003.83,        DecimalRound(V), '85 * 10000.045');
-  V := 85 * -10000.045;          AssertRound_D(-850003.83,       DecimalRound(V), '85 * -10000.045');
-  V := 85 * 100000.045;          AssertRound_D(8500003.83,       DecimalRound(V), '85 * 100000.045');
-  V := 85 * -100000.045;         AssertRound_D(-8500003.83,      DecimalRound(V), '85 * -100000.045');
-  V := 85 * 1000000.045;         AssertRound_D(85000003.83,      DecimalRound(V), '85 * 1000000.045');
-  V := 85 * -1000000.045;        AssertRound_D(-85000003.83,     DecimalRound(V), '85 * -1000000.045');
-  V := 85 * 10000000.045;        AssertRound_D(850000003.83,     DecimalRound(V), '85 * 10000000.045');
-  V := 85 * -10000000.045;       AssertRound_D(-850000003.83,    DecimalRound(V), '85 * -10000000.045');
-  V := 85 * 100000000.045;       AssertRound_D(8500000003.83,    DecimalRound(V), '85 * 100000000.045');
-  V := 85 * -100000000.045;      AssertRound_D(-8500000003.83,   DecimalRound(V), '85 * -100000000.045');
+  V := 85 * 1000.045;
+  AssertRound_D(85003.83,         DecimalRound(V), '85 * 1000.045');
+
+  V := 85 * -1000.045;
+  AssertRound_D(-85003.83,        DecimalRound(V), '85 * -1000.045');
+
+  V := 85 * 10000.045;
+  AssertRound_D(850003.83,        DecimalRound(V), '85 * 10000.045');
+
+  V := 85 * -10000.045;
+  AssertRound_D(-850003.83,       DecimalRound(V), '85 * -10000.045');
+
+  V := 85 * 100000.045;
+  AssertRound_D(8500003.83,       DecimalRound(V), '85 * 100000.045');
+
+  V := 85 * -100000.045;
+  AssertRound_D(-8500003.83,      DecimalRound(V), '85 * -100000.045');
+
+  V := 85 * 1000000.045;
+  AssertRound_D(85000003.83,      DecimalRound(V), '85 * 1000000.045');
+
+  V := 85 * -1000000.045;
+  AssertRound_D(-85000003.83,     DecimalRound(V), '85 * -1000000.045');
+
+  V := 85 * 10000000.045;
+  AssertRound_D(850000003.83,     DecimalRound(V), '85 * 10000000.045');
+
+  V := 85 * -10000000.045;
+  AssertRound_D(-850000003.83,    DecimalRound(V), '85 * -10000000.045');
+
+  V := 85 * 100000000.045;
+  AssertRound_D(8500000003.83,    DecimalRound(V), '85 * 100000000.045');
+
+  V := 85 * -100000000.045;
+  AssertRound_D(-8500000003.83,   DecimalRound(V), '85 * -100000000.045');
+
   // Delphi's SimpleRoundTo returns .82 on these two:
-  V := 85 * 1000000000.045;      AssertRound_D(85000000003.83,   DecimalRound(V), '85 * 1_000_000_000.045 (RTL SimpleRoundTo fails here)');
-  V := 85 * -1000000000.045;     AssertRound_D(-85000000003.83,  DecimalRound(V), '85 * -1_000_000_000.045 (RTL SimpleRoundTo fails here)');
+  V := 85 * 1000000000.045;
+  AssertRound_D(85000000003.83,   DecimalRound(V), '85 * 1_000_000_000.045 (RTL SimpleRoundTo fails here)');
+
+  V := 85 * -1000000000.045;
+  AssertRound_D(-85000000003.83,  DecimalRound(V), '85 * -1_000_000_000.045 (RTL SimpleRoundTo fails here)');
+
   // ...but SimpleRoundTo works again here, so it is not strictly a size issue:
-  V := 85 * 10000000000.045;     AssertRound_D(850000000003.83,  DecimalRound(V), '85 * 10_000_000_000.045');
-  V := 85 * -10000000000.045;    AssertRound_D(-850000000003.83, DecimalRound(V), '85 * -10_000_000_000.045');
+  V := 85 * 10000000000.045;
+  AssertRound_D(850000000003.83,  DecimalRound(V), '85 * 10_000_000_000.045');
+
+  V := 85 * -10000000000.045;
+  AssertRound_D(-850000000003.83, DecimalRound(V), '85 * -10_000_000_000.045');
 end;
 
 {$IFDEF SUPPORTS_TRUE_EXTENDED}
@@ -283,22 +321,53 @@ procedure TDecimalRoundTrickyCases.Multiplications_By_Large_X_045_Extended;
 var
   V: Extended;
 begin
-  V := 85 * 1000.045;            AssertRound_E(85003.83,         DecimalRound(V), '85 * 1000.045');
-  V := 85 * -1000.045;           AssertRound_E(-85003.83,        DecimalRound(V), '85 * -1000.045');
-  V := 85 * 10000.045;           AssertRound_E(850003.83,        DecimalRound(V), '85 * 10000.045');
-  V := 85 * -10000.045;          AssertRound_E(-850003.83,       DecimalRound(V), '85 * -10000.045');
-  V := 85 * 100000.045;          AssertRound_E(8500003.83,       DecimalRound(V), '85 * 100000.045');
-  V := 85 * -100000.045;         AssertRound_E(-8500003.83,      DecimalRound(V), '85 * -100000.045');
-  V := 85 * 1000000.045;         AssertRound_E(85000003.83,      DecimalRound(V), '85 * 1000000.045');
-  V := 85 * -1000000.045;        AssertRound_E(-85000003.83,     DecimalRound(V), '85 * -1000000.045');
-  V := 85 * 10000000.045;        AssertRound_E(850000003.83,     DecimalRound(V), '85 * 10000000.045');
-  V := 85 * -10000000.045;       AssertRound_E(-850000003.83,    DecimalRound(V), '85 * -10000000.045');
-  V := 85 * 100000000.045;       AssertRound_E(8500000003.83,    DecimalRound(V), '85 * 100000000.045');
-  V := 85 * -100000000.045;      AssertRound_E(-8500000003.83,   DecimalRound(V), '85 * -100000000.045');
-  V := 85 * 1000000000.045;      AssertRound_E(85000000003.83,   DecimalRound(V), '85 * 1_000_000_000.045 (RTL SimpleRoundTo fails here)');
-  V := 85 * -1000000000.045;     AssertRound_E(-85000000003.83,  DecimalRound(V), '85 * -1_000_000_000.045 (RTL SimpleRoundTo fails here)');
-  V := 85 * 10000000000.045;     AssertRound_E(850000000003.83,  DecimalRound(V), '85 * 10_000_000_000.045');
-  V := 85 * -10000000000.045;    AssertRound_E(-850000000003.83, DecimalRound(V), '85 * -10_000_000_000.045');
+  V := 85 * 1000.045;
+  AssertRound_E(85003.83,         DecimalRound(V), '85 * 1000.045');
+
+  V := 85 * -1000.045;
+  AssertRound_E(-85003.83,        DecimalRound(V), '85 * -1000.045');
+
+  V := 85 * 10000.045;
+  AssertRound_E(850003.83,        DecimalRound(V), '85 * 10000.045');
+
+  V := 85 * -10000.045;
+  AssertRound_E(-850003.83,       DecimalRound(V), '85 * -10000.045');
+
+  V := 85 * 100000.045;
+  AssertRound_E(8500003.83,       DecimalRound(V), '85 * 100000.045');
+
+  V := 85 * -100000.045;
+  AssertRound_E(-8500003.83,      DecimalRound(V), '85 * -100000.045');
+
+  V := 85 * 1000000.045;
+  AssertRound_E(85000003.83,      DecimalRound(V), '85 * 1000000.045');
+
+  V := 85 * -1000000.045;
+  AssertRound_E(-85000003.83,     DecimalRound(V), '85 * -1000000.045');
+
+  V := 85 * 10000000.045;
+  AssertRound_E(850000003.83,     DecimalRound(V), '85 * 10000000.045');
+
+  V := 85 * -10000000.045;
+  AssertRound_E(-850000003.83,    DecimalRound(V), '85 * -10000000.045');
+
+  V := 85 * 100000000.045;
+  AssertRound_E(8500000003.83,    DecimalRound(V), '85 * 100000000.045');
+
+  V := 85 * -100000000.045;
+  AssertRound_E(-8500000003.83,   DecimalRound(V), '85 * -100000000.045');
+
+  V := 85 * 1000000000.045;
+  AssertRound_E(85000000003.83,   DecimalRound(V), '85 * 1_000_000_000.045 (RTL SimpleRoundTo fails here)');
+
+  V := 85 * -1000000000.045;
+  AssertRound_E(-85000000003.83,  DecimalRound(V), '85 * -1_000_000_000.045 (RTL SimpleRoundTo fails here)');
+
+  V := 85 * 10000000000.045;
+  AssertRound_E(850000000003.83,  DecimalRound(V), '85 * 10_000_000_000.045');
+
+  V := 85 * -10000000000.045;
+  AssertRound_E(-850000000003.83, DecimalRound(V), '85 * -10_000_000_000.045');
 end;
 {$ENDIF}
 
@@ -310,10 +379,17 @@ procedure TDecimalRoundTrickyCases.HalfUp_Boundary_Values_Double;
 var
   V: Double;
 begin
-  V := 0.045;     AssertRound_D(0.05,   DecimalRound(V),    '0.045 (bankers would give 0.04)');
-  V := 0.055;     AssertRound_D(0.06,   DecimalRound(V),    '0.055');
-  V := 1.66665;   AssertRound_D(1.6667, DecimalRound(V, 4), '1.66665 to 4 dp (bankers would give 1.6666)');
-  V := 1.55555;   AssertRound_D(1.5556, DecimalRound(V, 4), '1.55555 to 4 dp');
+  V := 0.045;
+  AssertRound_D(0.05,   DecimalRound(V),    '0.045 (bankers would give 0.04)');
+
+  V := 0.055;
+  AssertRound_D(0.06,   DecimalRound(V),    '0.055');
+
+  V := 1.66665;
+  AssertRound_D(1.6667, DecimalRound(V, 4), '1.66665 to 4 dp (bankers would give 1.6666)');
+
+  V := 1.55555;
+  AssertRound_D(1.5556, DecimalRound(V, 4), '1.55555 to 4 dp');
 end;
 
 {$IFDEF SUPPORTS_TRUE_EXTENDED}
@@ -321,10 +397,17 @@ procedure TDecimalRoundTrickyCases.HalfUp_Boundary_Values_Extended;
 var
   V: Extended;
 begin
-  V := 0.045;     AssertRound_E(0.05,   DecimalRound(V),    '0.045 (bankers would give 0.04)');
-  V := 0.055;     AssertRound_E(0.06,   DecimalRound(V),    '0.055');
-  V := 1.66665;   AssertRound_E(1.6667, DecimalRound(V, 4), '1.66665 to 4 dp (bankers would give 1.6666)');
-  V := 1.55555;   AssertRound_E(1.5556, DecimalRound(V, 4), '1.55555 to 4 dp');
+  V := 0.045;
+  AssertRound_E(0.05,   DecimalRound(V),    '0.045 (bankers would give 0.04)');
+
+  V := 0.055;
+  AssertRound_E(0.06,   DecimalRound(V),    '0.055');
+
+  V := 1.66665;
+  AssertRound_E(1.6667, DecimalRound(V, 4), '1.66665 to 4 dp (bankers would give 1.6666)');
+
+  V := 1.55555;
+  AssertRound_E(1.5556, DecimalRound(V, 4), '1.55555 to 4 dp');
 end;
 {$ENDIF}
 
@@ -335,6 +418,7 @@ var
   V: Double;
 begin
   V := 1234.56;
+
   AssertRound_D(1235, DecimalRound(V,  0), '1234.56 to 0 dp');
   AssertRound_D(1230, DecimalRound(V, -1), '1234.56 to -1 dp (nearest 10)');
   AssertRound_D(1200, DecimalRound(V, -2), '1234.56 to -2 dp (nearest 100)');
@@ -347,6 +431,7 @@ var
   V: Extended;
 begin
   V := 1234.56;
+
   AssertRound_E(1235, DecimalRound(V,  0), '1234.56 to 0 dp');
   AssertRound_E(1230, DecimalRound(V, -1), '1234.56 to -1 dp (nearest 10)');
   AssertRound_E(1200, DecimalRound(V, -2), '1234.56 to -2 dp (nearest 100)');
@@ -361,6 +446,7 @@ var
   V: Double;
 begin
   V := 1.12345678901234567890;
+
   AssertRound_D(1.123,       DecimalRound(V, 3), '3 dp');
   AssertRound_D(1.1235,      DecimalRound(V, 4), '4 dp');
   AssertRound_D(1.12346,     DecimalRound(V, 5), '5 dp');
@@ -369,9 +455,14 @@ begin
   AssertRound_D(1.12345679,  DecimalRound(V, 8), '8 dp');
   AssertRound_D(1.123456789, DecimalRound(V, 9), '9 dp');
 
-  V := 1.11111;  AssertRound_D(1.00,  DecimalRound(V, 0), '1.11111 to 0 dp');
-  V := 1.99;     AssertRound_D(2.00,  DecimalRound(V, 0), '1.99 to 0 dp');
-  V := -1.99;    AssertRound_D(-2.00, DecimalRound(V, 0), '-1.99 to 0 dp');
+  V := 1.11111;
+  AssertRound_D(1.00,  DecimalRound(V, 0), '1.11111 to 0 dp');
+
+  V := 1.99;
+  AssertRound_D(2.00,  DecimalRound(V, 0), '1.99 to 0 dp');
+
+  V := -1.99;
+  AssertRound_D(-2.00, DecimalRound(V, 0), '-1.99 to 0 dp');
 end;
 
 {$IFDEF SUPPORTS_TRUE_EXTENDED}
@@ -380,6 +471,7 @@ var
   V: Extended;
 begin
   V := 1.12345678901234567890;
+
   AssertRound_E(1.123,       DecimalRound(V, 3), '3 dp');
   AssertRound_E(1.1235,      DecimalRound(V, 4), '4 dp');
   AssertRound_E(1.12346,     DecimalRound(V, 5), '5 dp');
@@ -388,9 +480,14 @@ begin
   AssertRound_E(1.12345679,  DecimalRound(V, 8), '8 dp');
   AssertRound_E(1.123456789, DecimalRound(V, 9), '9 dp');
 
-  V := 1.11111;  AssertRound_E(1.00,  DecimalRound(V, 0), '1.11111 to 0 dp');
-  V := 1.99;     AssertRound_E(2.00,  DecimalRound(V, 0), '1.99 to 0 dp');
-  V := -1.99;    AssertRound_E(-2.00, DecimalRound(V, 0), '-1.99 to 0 dp');
+  V := 1.11111;
+  AssertRound_E(1.00,  DecimalRound(V, 0), '1.11111 to 0 dp');
+
+  V := 1.99;
+  AssertRound_E(2.00,  DecimalRound(V, 0), '1.99 to 0 dp');
+
+  V := -1.99;
+  AssertRound_E(-2.00, DecimalRound(V, 0), '-1.99 to 0 dp');
 end;
 {$ENDIF}
 
@@ -401,6 +498,7 @@ var
   V: Double;
 begin
   V := 1470724508.0318;
+
   AssertRound_D(1470724508.03, DecimalRound(V), '1470724508.0318 to 2 dp');
 end;
 
@@ -410,6 +508,7 @@ var
   V: Extended;
 begin
   V := 1470724508.0318;
+
   AssertRound_E(1470724508.03, DecimalRound(V), '1470724508.0318 to 2 dp');
 end;
 {$ENDIF}
