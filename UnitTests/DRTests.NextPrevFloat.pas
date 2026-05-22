@@ -166,26 +166,26 @@ end;
 
 procedure TNextPrevFloatTests.NextFloat_Single_Returns_Strictly_Greater;
 begin
-  Assert.IsTrue(NextFloat(Single(1.0)) > 1.0);
-  Assert.IsTrue(NextFloat(Single(-1.0)) > -1.0);
+  Assert.IsTrue(NextFloat(Single(1.00)) > 1.00);
+  Assert.IsTrue(NextFloat(Single(-1.00)) > -1.00);
 end;
 
 procedure TNextPrevFloatTests.NextFloat_Double_Returns_Strictly_Greater;
 begin
-  Assert.IsTrue(NextFloat(Double(1.0)) > 1.0);
-  Assert.IsTrue(NextFloat(Double(-1.0)) > -1.0);
+  Assert.IsTrue(NextFloat(Double(1.00)) > 1.00);
+  Assert.IsTrue(NextFloat(Double(-1.00)) > -1.00);
 end;
 
 procedure TNextPrevFloatTests.PrevFloat_Single_Returns_Strictly_Less;
 begin
-  Assert.IsTrue(PrevFloat(Single(1.0)) < 1.0);
-  Assert.IsTrue(PrevFloat(Single(-1.0)) < -1.0);
+  Assert.IsTrue(PrevFloat(Single(1.00)) < 1.00);
+  Assert.IsTrue(PrevFloat(Single(-1.00)) < -1.00);
 end;
 
 procedure TNextPrevFloatTests.PrevFloat_Double_Returns_Strictly_Less;
 begin
-  Assert.IsTrue(PrevFloat(Double(1.0)) < 1.0);
-  Assert.IsTrue(PrevFloat(Double(-1.0)) < -1.0);
+  Assert.IsTrue(PrevFloat(Double(1.00)) < 1.00);
+  Assert.IsTrue(PrevFloat(Double(-1.00)) < -1.00);
 end;
 
 initialization

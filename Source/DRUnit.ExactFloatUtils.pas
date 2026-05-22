@@ -10,6 +10,7 @@
 
 ***************************************************************************** *)
 
+{$INCLUDE DecimalRound.inc}
 {$OVERFLOWCHECKS OFF}
 {$RANGECHECKS OFF}
 // Deliberate bit-level manipulation of the IEEE significand of
@@ -37,12 +38,23 @@ interface
 
   { Successor / predecessor in the floating-point sense: returns the next
     (or previous) representable value. Renamed from Succ/Pred to avoid
-    shadowing the system intrinsics. }
+    shadowing the system intrinsics.
+
+    The Single and Double overloads operate on the native IEEE bit pattern
+    and are platform-independent. The Extended overload still uses the
+    80-bit-significand approach, so it is only declared when Extended is a
+    real 80-bit type (SUPPORTS_TRUE_EXTENDED — currently CPUX86 only;
+    on x64 Extended is just an alias for Double and that overload would
+    collide with the Double one). }
+{$IFDEF SUPPORTS_TRUE_EXTENDED}
   function NextFloat(const AExtendedValue: Extended): Extended; overload;
+{$ENDIF}
   function NextFloat(const ADoubleValue: Double): Double; overload;
   function NextFloat(const ASingleValue: Single): Single; overload;
 
+{$IFDEF SUPPORTS_TRUE_EXTENDED}
   function PrevFloat(const AExtendedValue: Extended): Extended; overload;
+{$ENDIF}
   function PrevFloat(const ADoubleValue: Double): Double; overload;
   function PrevFloat(const ASingleValue: Single): Single; overload;
 
@@ -274,6 +286,7 @@ begin
     Result := Result + IntToHex(TB10(LExtendedValue)[LIndex], 2);
 end;
 
+{$IFDEF SUPPORTS_TRUE_EXTENDED}
 function NextFloat(const AExtendedValue: Extended): Extended;
 var
   LExtendedRec: TExtendedRec;
@@ -327,116 +340,85 @@ begin
 
   Result := Extended(LExtendedRec);
 end;
+{$ENDIF}
+
+{ ----- Double / Single overloads: operate directly on the native IEEE-754
+        bit pattern. Platform-independent (no TExtendedRec dependency) and
+        gives correct 1-ULP semantics.
+
+        Convention preserved from the original Herbster code:
+          NextFloat(0)         = MinDouble / MinSingle  (smallest normal)
+          PrevFloat(0)         = -MinDouble / -MinSingle
+          NextFloat(-MinX)     = 0
+          PrevFloat(+MinX)     = 0
+        i.e. subnormals are skipped at the zero boundary. }
 
 function NextFloat(const ADoubleValue: Double): Double;
 var
-  LExtendedRec: TExtendedRec;
-  LExtendedValue: Extended;
+  LBits: Int64;
 begin
-  if ADoubleValue < 0.00 then
-    Exit(-PrevFloat(-ADoubleValue))
-  else if ADoubleValue = 0.00 then
+  if ADoubleValue = 0.0 then
     Exit(MinDouble)
   else if ADoubleValue = -MinDouble then
-    Exit(0.00);
+    Exit(0.0);
 
-  LExtendedValue := ADoubleValue;
-  LExtendedRec := TExtendedRec(LExtendedValue);
-  LExtendedRec.Significand := LExtendedRec.Significand + INC_DOUBLE;
-
-  Assert(LExtendedRec.Significand <> 0);
-
-  if (LExtendedRec.Significand and $8000000000000000) = 0 then
-  begin
-    LExtendedRec.Significand := LExtendedRec.Significand shr 1 or $8000000000000000;
-    LExtendedRec.Exponent := LExtendedRec.Exponent + 1;
-  end;
-
-  Result := Extended(LExtendedRec);
+  LBits := PInt64(@ADoubleValue)^;
+  if (LBits and Int64($8000000000000000)) = 0 then
+    Inc(LBits)   // positive: next-larger magnitude
+  else
+    Dec(LBits);  // negative: next-smaller magnitude (closer to zero)
+  Result := PDouble(@LBits)^;
 end;
 
 function PrevFloat(const ADoubleValue: Double): Double;
 var
-  LExtendedRec: TExtendedRec;
-  LExtendedValue: Extended;
+  LBits: Int64;
 begin
-  if ADoubleValue < 0 then
-    Exit(-NextFloat(-ADoubleValue))
-  else if ADoubleValue = 0 then
+  if ADoubleValue = 0.0 then
     Exit(-MinDouble)
   else if ADoubleValue = +MinDouble then
-    Exit(0.00);
+    Exit(0.0);
 
-  LExtendedValue := ADoubleValue;
-  LExtendedRec := TExtendedRec(LExtendedValue);
-
-  LExtendedRec.Significand := LExtendedRec.Significand - INC_DOUBLE;
-
-  Assert(LExtendedRec.Significand <> 0);
-
-  while (LExtendedRec.Significand <> 0) and ((LExtendedRec.Significand and $8000000000000000) = 0) do
-  begin
-    LExtendedRec.Significand := LExtendedRec.Significand shl 1;
-    LExtendedRec.Exponent := LExtendedRec.Exponent - 1;
-  end;
-
-  Result := Extended(LExtendedRec);
+  LBits := PInt64(@ADoubleValue)^;
+  if (LBits and Int64($8000000000000000)) = 0 then
+    Dec(LBits)   // positive: next-smaller magnitude (closer to zero)
+  else
+    Inc(LBits);  // negative: next-larger magnitude
+  Result := PDouble(@LBits)^;
 end;
 
 function NextFloat(const ASingleValue: Single): Single;
 var
-  LExtendedRec: TExtendedRec;
-  LExtendedValue: Extended;
+  LBits: Cardinal;
 begin
-  if ASingleValue < 0.00 then
-    Exit(-PrevFloat(-ASingleValue))
-  else if ASingleValue = 0.00 then
+  if ASingleValue = 0.0 then
     Exit(MinSingle)
   else if ASingleValue = -MinSingle then
-    Exit(0.00);
+    Exit(0.0);
 
-  LExtendedValue := ASingleValue;
-  LExtendedRec := TExtendedRec(LExtendedValue);
-
-  LExtendedRec.Significand := LExtendedRec.Significand + INC_SINGLE;
-
-  Assert(LExtendedRec.Significand <> 0);
-
-  if (LExtendedRec.Significand and $8000000000000000) = 0 then
-  begin
-    LExtendedRec.Significand := LExtendedRec.Significand shr 1 or $8000000000000000;
-    LExtendedRec.Exponent := LExtendedRec.Exponent + 1;
-  end;
-
-  Result := Extended(LExtendedRec);
+  LBits := PCardinal(@ASingleValue)^;
+  if (LBits and $80000000) = 0 then
+    Inc(LBits)
+  else
+    Dec(LBits);
+  Result := PSingle(@LBits)^;
 end;
 
 function PrevFloat(const ASingleValue: Single): Single;
 var
-  LExtendedRec: TExtendedRec;
-  LExtendedValue: Extended;
+  LBits: Cardinal;
 begin
-  if ASingleValue < 0.00 then
-    Exit(-NextFloat(-ASingleValue))
-  else if ASingleValue = 0.00 then
+  if ASingleValue = 0.0 then
     Exit(-MinSingle)
   else if ASingleValue = +MinSingle then
-    Exit(0.00);
+    Exit(0.0);
 
-  LExtendedValue := ASingleValue;
-  LExtendedRec := TExtendedRec(LExtendedValue);
-
-  LExtendedRec.Significand := LExtendedRec.Significand - INC_SINGLE;
-
-  Assert(LExtendedRec.Significand <> 0);
-
-  while (LExtendedRec.Significand <> 0) and ((LExtendedRec.Significand and $8000000000000000) = 0) do
-  begin
-    LExtendedRec.Significand := LExtendedRec.Significand shl 1;
-    LExtendedRec.Exponent := LExtendedRec.Exponent - 1;
-  end;
-
-  Result := Extended(LExtendedRec);
+  LBits := PCardinal(@ASingleValue)^;
+  if (LBits and $80000000) = 0 then
+    Dec(LBits)
+  else
+    Inc(LBits);
+  Result := PSingle(@LBits)^;
 end;
 
 end.
