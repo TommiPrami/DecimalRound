@@ -15,7 +15,7 @@ uses
     misclassified infinities as NaN). }
   function IsNan(const ASingleValue: Single): Boolean; overload; inline;
   function IsNan(const ADoubleValue: Double): Boolean; overload; inline;
-{$IFDEF SUPPORTS_TRUE_EXTENDED}
+{$IF DEFINED(SUPPORTS_TRUE_EXTENDED)}
   function IsNan(const AExtendedValue: Extended): Boolean; overload; inline;
 {$ENDIF}
 
@@ -78,6 +78,7 @@ begin
 
   { Compute for Extended: }
   LFactor := 1.00;
+
   repeat
     LFactor := LFactor / 2.00;
     LExtendedTest := 1.00 + LFactor / 2.00;
@@ -102,7 +103,7 @@ begin
   Result := ((LBits and DOUBLE_EXPONENT_BITS) = DOUBLE_EXPONENT_BITS) and ((LBits and DOUBLE_MANTISSA_BITS) <> 0);
 end;
 
-{$IFDEF SUPPORTS_TRUE_EXTENDED}
+{$IFDEF DEFINED(SUPPORTS_TRUE_EXTENDED)}
 function IsNan(const AExtendedValue: Extended): Boolean;
 var
   LBits: TExtendedRec absolute AExtendedValue;
@@ -192,7 +193,11 @@ var
 begin
   LControlWord := GetX87CW;
 
+{$IF DEFINED(SUPPORTS_TRUE_EXTENDED)}
   Result := ((LControlWord and (PC or RC or PM)) = (RC_BANKERS or PC_EXTENDED or PM));
+{$ELSE}
+  Result := ((LControlWord and (PC or RC or PM)) = (RC_BANKERS or PC_DOUBLE or PM));
+{$ENDIF}
 end;
 
 procedure InitializePowerOfTenMultipliers;
