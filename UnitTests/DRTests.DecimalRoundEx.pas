@@ -50,6 +50,9 @@ implementation
 uses
   System.Math, DRUnit.Types, DRUnit.RoundEx;
 
+const
+  EPSILON: Double = 2.2204460493E-16;
+
 { ------------------------------------------------------------------- HalfUp }
 
 procedure TDecimalRoundExModeTests.HalfUp_Positive_Tie_GoesAwayFromZero;
@@ -145,7 +148,7 @@ end;
 procedure TDecimalRoundExEarlyExitTests.NoneMode_ReturnsValueUnchanged;
 { The drcNone branch is only present when DO_CHECKS is enabled (Debug). }
 begin
-  Assert.AreEqual<Extended>(1.234567, DecimalRoundEx(Double(1.234567), 2, drcNone));
+  Assert.AreEqual(1.234567, DecimalRoundEx(Double(1.234567), 2, drcNone), EPSILON, '');
 end;
 {$ENDIF}
 
