@@ -47,16 +47,16 @@ interface
     on x64 Extended is just an alias for Double and that overload would
     collide with the Double one). }
 {$IFDEF SUPPORTS_TRUE_EXTENDED}
-  function NextFloat(const AExtendedValue: Extended): Extended; overload;
+  function NextLargerFloat(const AExtendedValue: Extended): Extended; overload;
 {$ENDIF}
-  function NextFloat(const ADoubleValue: Double): Double; overload;
-  function NextFloat(const ASingleValue: Single): Single; overload;
+  function NextLargerFloat(const ADoubleValue: Double): Double; overload;
+  function NextLargerFloat(const ASingleValue: Single): Single; overload;
 
 {$IFDEF SUPPORTS_TRUE_EXTENDED}
-  function PrevFloat(const AExtendedValue: Extended): Extended; overload;
+  function NextSmallerFloat(const AExtendedValue: Extended): Extended; overload;
 {$ENDIF}
-  function PrevFloat(const ADoubleValue: Double): Double; overload;
-  function PrevFloat(const ASingleValue: Single): Single; overload;
+  function NextSmallerFloat(const ADoubleValue: Double): Double; overload;
+  function NextSmallerFloat(const ASingleValue: Single): Single; overload;
 
 implementation
 
@@ -287,13 +287,13 @@ begin
 end;
 
 {$IFDEF SUPPORTS_TRUE_EXTENDED}
-function NextFloat(const AExtendedValue: Extended): Extended;
+function NextLargerFloat(const AExtendedValue: Extended): Extended;
 var
   LExtendedRec: TExtendedRec;
 begin
 {$WARN SYMBOL_PLATFORM OFF}
   if AExtendedValue < 0.00 then
-    Exit(-PrevFloat(-AExtendedValue))
+    Exit(-NextSmallerFloat(-AExtendedValue))
   else if AExtendedValue = 0.00 then
     Exit(MinExtended)
   else if AExtendedValue = -MinExtended then
@@ -314,13 +314,13 @@ begin
   Result := Extended(LExtendedRec);
 end;
 
-function PrevFloat(const AExtendedValue: Extended): Extended;
+function NextSmallerFloat(const AExtendedValue: Extended): Extended;
 var
   LExtendedRec: TExtendedRec;
 begin
 {$WARN SYMBOL_PLATFORM OFF}
   if AExtendedValue < 0.00 then
-    Exit(-NextFloat(-AExtendedValue))
+    Exit(-NextLargerFloat(-AExtendedValue))
   else if AExtendedValue = 0.00 then
     Exit(-MinExtended)
   else if AExtendedValue = MinExtended then
@@ -347,13 +347,13 @@ end;
         gives correct 1-ULP semantics.
 
         Convention preserved from the original Herbster code:
-          NextFloat(0)         = MinDouble / MinSingle  (smallest normal)
-          PrevFloat(0)         = -MinDouble / -MinSingle
-          NextFloat(-MinX)     = 0
-          PrevFloat(+MinX)     = 0
+          NextLargerFloat(0)         = MinDouble / MinSingle  (smallest normal)
+          NextSmallerFloat(0)         = -MinDouble / -MinSingle
+          NextLargerFloat(-MinX)     = 0
+          NextSmallerFloat(+MinX)     = 0
         i.e. subnormals are skipped at the zero boundary. }
 
-function NextFloat(const ADoubleValue: Double): Double;
+function NextLargerFloat(const ADoubleValue: Double): Double;
 var
   LBits: Int64;
 begin
@@ -370,7 +370,7 @@ begin
   Result := PDouble(@LBits)^;
 end;
 
-function PrevFloat(const ADoubleValue: Double): Double;
+function NextSmallerFloat(const ADoubleValue: Double): Double;
 var
   LBits: Int64;
 begin
@@ -387,7 +387,7 @@ begin
   Result := PDouble(@LBits)^;
 end;
 
-function NextFloat(const ASingleValue: Single): Single;
+function NextLargerFloat(const ASingleValue: Single): Single;
 var
   LBits: Cardinal;
 begin
@@ -404,7 +404,7 @@ begin
   Result := PSingle(@LBits)^;
 end;
 
-function PrevFloat(const ASingleValue: Single): Single;
+function NextSmallerFloat(const ASingleValue: Single): Single;
 var
   LBits: Cardinal;
 begin

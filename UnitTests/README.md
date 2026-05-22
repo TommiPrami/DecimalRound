@@ -8,7 +8,7 @@ DUnitX-based test project for the DecimalRound library.
 | --- | --- |
 | `DecimalRoundTests.dpr` | Console DUnitX runner (also TestInsight-friendly via `TESTINSIGHT` define) |
 | `DRTests.IsNan.pas` | Regression coverage for the IsNan / Infinity classification bug |
-| `DRTests.NextPrevFloat.pas` | Regression coverage for `PrevFloat(Extended) = 0` returning the wrong sign |
+| `DRTests.NextPrevFloat.pas` | Regression coverage for `NextSmallerFloat(Extended) = 0` returning the wrong sign |
 | `DRTests.DecimalRound.pas` | Main `DecimalRound` (HalfUp) tests + slot for private trip-up cases (`TDecimalRoundTrickyCases`) |
 | `DRTests.DecimalRoundEx.pas` | Per-mode tests for `DecimalRoundEx` (HalfUp / HalfDown / HalfEven / HalfPos / HalfNeg / RndPos / RndNeg / RndDown / RndUp) |
 | `DRTests.Sanity.pas` | FPU control word + `gPowerOfTenMultipliers` lookup sanity |

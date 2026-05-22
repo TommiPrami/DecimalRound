@@ -1,8 +1,8 @@
 ﻿unit DRTests.NextPrevFloat;
 
-{ Regression coverage for NextFloat / PrevFloat.
+{ Regression coverage for NextLargerFloat / NextSmallerFloat.
 
-  Key bug guarded against: PrevFloat(Extended) for input 0 used to return
+  Key bug guarded against: NextSmallerFloat(Extended) for input 0 used to return
   +MinExtended instead of -MinExtended. The Double / Single overloads were
   always correct; this fixture pins all three to the same contract. }
 
@@ -17,18 +17,18 @@ type
   [TestFixture]
   TNextPrevFloatTests = class
   public
-    // PrevFloat(0) sign contract
-    [Test] procedure PrevFloat_Single_Of_Zero_Is_Negative;
-    [Test] procedure PrevFloat_Double_Of_Zero_Is_Negative;
+    // NextSmallerFloat(0) sign contract
+    [Test] procedure NextSmallerFloat_Single_Of_Zero_Is_Negative;
+    [Test] procedure NextSmallerFloat_Double_Of_Zero_Is_Negative;
 {$IF DEFINED(SUPPORTS_TRUE_EXTENDED)}
-    [Test] procedure PrevFloat_Extended_Of_Zero_Is_Negative;
+    [Test] procedure NextSmallerFloat_Extended_Of_Zero_Is_Negative;
 {$ENDIF}
 
-    // NextFloat(0) sign contract
-    [Test] procedure NextFloat_Single_Of_Zero_Is_Positive;
-    [Test] procedure NextFloat_Double_Of_Zero_Is_Positive;
+    // NextLargerFloat(0) sign contract
+    [Test] procedure NextLargerFloat_Single_Of_Zero_Is_Positive;
+    [Test] procedure NextLargerFloat_Double_Of_Zero_Is_Positive;
 {$IF DEFINED(SUPPORTS_TRUE_EXTENDED)}
-    [Test] procedure NextFloat_Extended_Of_Zero_Is_Positive;
+    [Test] procedure NextLargerFloat_Extended_Of_Zero_Is_Positive;
 {$ENDIF}
 
     // Inverse: Next(Prev(x)) = x
@@ -39,10 +39,10 @@ type
 {$ENDIF}
 
     // Strict ordering
-    [Test] procedure NextFloat_Single_Returns_Strictly_Greater;
-    [Test] procedure NextFloat_Double_Returns_Strictly_Greater;
-    [Test] procedure PrevFloat_Single_Returns_Strictly_Less;
-    [Test] procedure PrevFloat_Double_Returns_Strictly_Less;
+    [Test] procedure NextLargerFloat_Single_Returns_Strictly_Greater;
+    [Test] procedure NextLargerFloat_Double_Returns_Strictly_Greater;
+    [Test] procedure NextSmallerFloat_Single_Returns_Strictly_Less;
+    [Test] procedure NextSmallerFloat_Double_Returns_Strictly_Less;
   end;
 
 implementation
@@ -50,68 +50,68 @@ implementation
 uses
   System.SysUtils, System.Math, DRUnit.ExactFloatUtils, DRUnit.Consts;
 
-{ ----------------------------------------------------------- PrevFloat(0) }
+{ ----------------------------------------------------------- NextSmallerFloat(0) }
 
-procedure TNextPrevFloatTests.PrevFloat_Single_Of_Zero_Is_Negative;
+procedure TNextPrevFloatTests.NextSmallerFloat_Single_Of_Zero_Is_Negative;
 var
   LResult: Single;
 begin
-  LResult := PrevFloat(Single(0.0));
-  Assert.IsTrue(LResult < 0, 'PrevFloat(0: Single) must be < 0');
+  LResult := NextSmallerFloat(Single(0.0));
+  Assert.IsTrue(LResult < 0, 'NextSmallerFloat(0: Single) must be < 0');
   Assert.AreEqual<Single>(-MinSingle, LResult);
 end;
 
-procedure TNextPrevFloatTests.PrevFloat_Double_Of_Zero_Is_Negative;
+procedure TNextPrevFloatTests.NextSmallerFloat_Double_Of_Zero_Is_Negative;
 var
   LResult: Double;
 begin
-  LResult := PrevFloat(Double(0.0));
-  Assert.IsTrue(LResult < 0, 'PrevFloat(0: Double) must be < 0');
+  LResult := NextSmallerFloat(Double(0.0));
+  Assert.IsTrue(LResult < 0, 'NextSmallerFloat(0: Double) must be < 0');
   Assert.AreEqual<Double>(-MinDouble, LResult);
 end;
 
 {$IF DEFINED(SUPPORTS_TRUE_EXTENDED)}
-procedure TNextPrevFloatTests.PrevFloat_Extended_Of_Zero_Is_Negative;
+procedure TNextPrevFloatTests.NextSmallerFloat_Extended_Of_Zero_Is_Negative;
 var
   LResult: Extended;
 begin
-  LResult := PrevFloat(Extended(0.0));
+  LResult := NextSmallerFloat(Extended(0.0));
 
-  Assert.IsTrue(LResult < 0, 'PrevFloat(0: Extended) must be < 0 (regression: used to return +MinExtended)');
+  Assert.IsTrue(LResult < 0, 'NextSmallerFloat(0: Extended) must be < 0 (regression: used to return +MinExtended)');
   Assert.AreEqual<Extended>(-MinExtended, LResult);
 end;
 {$ENDIF}
 
-{ ----------------------------------------------------------- NextFloat(0) }
+{ ----------------------------------------------------------- NextLargerFloat(0) }
 
-procedure TNextPrevFloatTests.NextFloat_Single_Of_Zero_Is_Positive;
+procedure TNextPrevFloatTests.NextLargerFloat_Single_Of_Zero_Is_Positive;
 var
   LResult: Single;
 begin
-  LResult := NextFloat(Single(0.0));
+  LResult := NextLargerFloat(Single(0.0));
 
-  Assert.IsTrue(LResult > 0, 'NextFloat(0: Single) must be > 0');
+  Assert.IsTrue(LResult > 0, 'NextLargerFloat(0: Single) must be > 0');
   Assert.AreEqual<Single>(MinSingle, LResult);
 end;
 
-procedure TNextPrevFloatTests.NextFloat_Double_Of_Zero_Is_Positive;
+procedure TNextPrevFloatTests.NextLargerFloat_Double_Of_Zero_Is_Positive;
 var
   LResult: Double;
 begin
-  LResult := NextFloat(Double(0.0));
+  LResult := NextLargerFloat(Double(0.0));
 
-  Assert.IsTrue(LResult > 0, 'NextFloat(0: Double) must be > 0');
+  Assert.IsTrue(LResult > 0, 'NextLargerFloat(0: Double) must be > 0');
   Assert.AreEqual<Double>(MinDouble, LResult);
 end;
 
 {$IF DEFINED(SUPPORTS_TRUE_EXTENDED)}
-procedure TNextPrevFloatTests.NextFloat_Extended_Of_Zero_Is_Positive;
+procedure TNextPrevFloatTests.NextLargerFloat_Extended_Of_Zero_Is_Positive;
 var
   LResult: Extended;
 begin
-  LResult := NextFloat(Extended(0.0));
+  LResult := NextLargerFloat(Extended(0.0));
 
-  Assert.IsTrue(LResult > 0, 'NextFloat(0: Extended) must be > 0');
+  Assert.IsTrue(LResult > 0, 'NextLargerFloat(0: Extended) must be > 0');
   Assert.AreEqual<Extended>(MinExtended, LResult);
 end;
 {$ENDIF}
@@ -128,7 +128,7 @@ begin
   for LIndex := Low(CSamples) to High(CSamples) do
   begin
     LValue := CSamples[LIndex];
-    Assert.AreEqual(LValue, NextFloat(PrevFloat(LValue)), EPSILON_SINGLE, Format('Round-trip failed for %g', [LValue]));
+    Assert.AreEqual(LValue, NextLargerFloat(NextSmallerFloat(LValue)), EPSILON_SINGLE, Format('Round-trip failed for %g', [LValue]));
   end;
 end;
 
@@ -142,7 +142,7 @@ begin
   for LIndex := Low(CSamples) to High(CSamples) do
   begin
     LValue := CSamples[LIndex];
-    Assert.AreEqual(LValue, NextFloat(PrevFloat(LValue)), EPSILON_DOUBLE, Format('Round-trip failed for %g', [LValue]));
+    Assert.AreEqual(LValue, NextLargerFloat(NextSmallerFloat(LValue)), EPSILON_DOUBLE, Format('Round-trip failed for %g', [LValue]));
   end;
 end;
 
@@ -157,35 +157,35 @@ begin
   for LIndex := Low(CSamples) to High(CSamples) do
   begin
     LValue := CSamples[LIndex];
-    Assert.AreEqual(LValue, NextFloat(PrevFloat(LValue)), EPSILON_EXTENDED, Format('Round-trip failed for %g', [LValue]));
+    Assert.AreEqual(LValue, NextLargerFloat(NextSmallerFloat(LValue)), EPSILON_EXTENDED, Format('Round-trip failed for %g', [LValue]));
   end;
 end;
 {$ENDIF}
 
 { Ordering }
 
-procedure TNextPrevFloatTests.NextFloat_Single_Returns_Strictly_Greater;
+procedure TNextPrevFloatTests.NextLargerFloat_Single_Returns_Strictly_Greater;
 begin
-  Assert.IsTrue(NextFloat(Single(1.00)) > 1.00);
-  Assert.IsTrue(NextFloat(Single(-1.00)) > -1.00);
+  Assert.IsTrue(NextLargerFloat(Single(1.00)) > 1.00);
+  Assert.IsTrue(NextLargerFloat(Single(-1.00)) > -1.00);
 end;
 
-procedure TNextPrevFloatTests.NextFloat_Double_Returns_Strictly_Greater;
+procedure TNextPrevFloatTests.NextLargerFloat_Double_Returns_Strictly_Greater;
 begin
-  Assert.IsTrue(NextFloat(Double(1.00)) > 1.00);
-  Assert.IsTrue(NextFloat(Double(-1.00)) > -1.00);
+  Assert.IsTrue(NextLargerFloat(Double(1.00)) > 1.00);
+  Assert.IsTrue(NextLargerFloat(Double(-1.00)) > -1.00);
 end;
 
-procedure TNextPrevFloatTests.PrevFloat_Single_Returns_Strictly_Less;
+procedure TNextPrevFloatTests.NextSmallerFloat_Single_Returns_Strictly_Less;
 begin
-  Assert.IsTrue(PrevFloat(Single(1.00)) < 1.00);
-  Assert.IsTrue(PrevFloat(Single(-1.00)) < -1.00);
+  Assert.IsTrue(NextSmallerFloat(Single(1.00)) < 1.00);
+  Assert.IsTrue(NextSmallerFloat(Single(-1.00)) < -1.00);
 end;
 
-procedure TNextPrevFloatTests.PrevFloat_Double_Returns_Strictly_Less;
+procedure TNextPrevFloatTests.NextSmallerFloat_Double_Returns_Strictly_Less;
 begin
-  Assert.IsTrue(PrevFloat(Double(1.00)) < 1.00);
-  Assert.IsTrue(PrevFloat(Double(-1.00)) < -1.00);
+  Assert.IsTrue(NextSmallerFloat(Double(1.00)) < 1.00);
+  Assert.IsTrue(NextSmallerFloat(Double(-1.00)) < -1.00);
 end;
 
 initialization

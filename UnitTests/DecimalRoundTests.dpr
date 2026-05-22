@@ -24,6 +24,7 @@ uses
   DRTests.NextPrevFloat in 'DRTests.NextPrevFloat.pas',
   DRTests.DecimalRound in 'DRTests.DecimalRound.pas',
   DRTests.DecimalRoundEx in 'DRTests.DecimalRoundEx.pas',
+  DRTests.DecimalRoundAutoCases in 'DRTests.DecimalRoundAutoCases.pas',
   DRTests.Sanity in 'DRTests.Sanity.pas';
 
 {$IFNDEF TESTINSIGHT}
