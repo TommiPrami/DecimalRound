@@ -2,8 +2,8 @@ object DRMainForm: TDRMainForm
   Left = 0
   Top = 0
   Caption = 'DRMainForm'
-  ClientHeight = 295
-  ClientWidth = 1092
+  ClientHeight = 688
+  ClientWidth = 1554
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,8 +15,8 @@ object DRMainForm: TDRMainForm
   object MemoLog: TMemo
     Left = 0
     Top = 0
-    Width = 978
-    Height = 295
+    Width = 1440
+    Height = 688
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -24,13 +24,15 @@ object DRMainForm: TDRMainForm
     Font.Name = 'Courier New'
     Font.Style = []
     ParentFont = False
+    ScrollBars = ssBoth
     TabOrder = 0
+    WordWrap = False
   end
   object PanelButtons: TPanel
-    Left = 978
+    Left = 1440
     Top = 0
     Width = 114
-    Height = 295
+    Height = 688
     Align = alRight
     ShowCaption = False
     TabOrder = 1
@@ -41,20 +43,31 @@ object DRMainForm: TDRMainForm
       Width = 106
       Height = 25
       Align = alTop
-      Caption = 'Round test'
+      Caption = 'Round tests'
       TabOrder = 0
       OnClick = ButtonRoundTestClick
     end
     object ButtonExactFloat: TButton
       AlignWithMargins = True
       Left = 4
-      Top = 35
+      Top = 66
       Width = 106
       Height = 25
       Align = alTop
       Caption = 'Exact Float'
       TabOrder = 1
       OnClick = ButtonExactFloatClick
+    end
+    object ButtonMoreRoundTests: TButton
+      AlignWithMargins = True
+      Left = 4
+      Top = 35
+      Width = 106
+      Height = 25
+      Align = alTop
+      Caption = 'More Round tests'
+      TabOrder = 2
+      OnClick = ButtonMoreRoundTestsClick
     end
   end
 end
