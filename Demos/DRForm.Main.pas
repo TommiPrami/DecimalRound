@@ -33,7 +33,7 @@ implementation
 {$R *.dfm}
 
 uses
-  System.Math, DRUnit.ExactFloatUtils, DRUnit.Round, DRUnit.RoundEx, DRUnit.Utils;
+  System.Math, Delphi.ExactFloatToString, DRUnit.Round, DRUnit.RoundEx, DRUnit.Utils;
 
 var
   GFormatSettings: TFormatSettings;
@@ -69,8 +69,7 @@ begin
   Log('ExactFloatToStr');
   Log('');
 
-  DoRound('', 0.00, ''); // This outputs header
-  Log(ExactFloatToStr(1.1234, 3));
+  Log(ExactFloatToStr(1.1234));
 
   Log('');
 end;
@@ -186,7 +185,7 @@ var
   LStrLength: Integer;
   LRawResultDecimalCount: Integer;
 begin
-  Result := ExactFloatToStr(AValue, 0);
+  Result := ExactFloatToStr(AValue);
 
   LSeparatorPos := Pos('.', Result);
   LStrLength := Length(Result);

@@ -126,6 +126,7 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="..\Source\3rdParty\Delphi.ExactFloatToStringRoutines\Delphi.ExactFloatToString.pas"/>
         <DCCReference Include="DRForm.Main.pas">
             <Form>DRMainForm</Form>
         </DCCReference>
@@ -134,7 +135,6 @@
         <DCCReference Include="..\Source\DRUnit.RoundEx.pas"/>
         <DCCReference Include="..\Source\DRUnit.Types.pas"/>
         <DCCReference Include="..\Source\DRUnit.Utils.pas"/>
-        <DCCReference Include="..\Source\DRUnit.ExactFloatUtils.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
