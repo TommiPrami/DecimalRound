@@ -65,7 +65,7 @@ type
 implementation
 
 uses
-  System.SysUtils, DRUnit.Round;
+  System.SysUtils, DRUnit.Consts, DRUnit.Round;
 
 procedure TDecimalRoundAutoCases.DecimalRound_Case(const AInputValue, AExpectedValue: Double);
 var
@@ -73,9 +73,8 @@ var
 begin
   LRoundedValue := DecimalRound(AInputValue);
 
-  Assert.AreEqual(AExpectedValue, LRoundedValue, 0.00,
-    Format('DecimalRound(%g) returned %g, expected %g',
-      [AInputValue, LRoundedValue, AExpectedValue]));
+  Assert.AreEqual(AExpectedValue, LRoundedValue, EPSILON_DOUBLE, Format('DecimalRound(%g) returned %g, expected %g',
+    [AInputValue, LRoundedValue, AExpectedValue]));
 end;
 
 initialization
