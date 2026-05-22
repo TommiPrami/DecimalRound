@@ -35,6 +35,8 @@ type
     [Test] procedure Tricky_1_015_Times_100_Rounds_To_101_5;
     [Test] procedure Tricky_3_015_Times_100_Rounds_To_301_5;
     [Test] procedure Tricky_Negative_2_245_Rounds_To_Minus_2_25;
+    //
+    [Test] procedure LargeValues_ManualTests;
   end;
 
   [TestFixture]
@@ -97,6 +99,72 @@ begin
   Assert.AreEqual<Extended>(2.0, DecimalRound(Double(1.5), 0));
   Assert.AreEqual<Extended>(2.0, DecimalRound(Double(2.4), 0));
   Assert.AreEqual<Extended>(3.0, DecimalRound(Double(2.6), 0));
+end;
+
+procedure TDecimalRoundTests.LargeValues_ManualTests;
+begin
+  Assert.WillNotRaise(
+    procedure
+    begin
+      DecimalRound(High(Int64) * 1.1);
+    end,
+    EInvalidOp);
+
+  Assert.WillNotRaise(
+    procedure
+    begin
+      DecimalRound(Low(Int64) * 1.1);
+    end,
+    EInvalidOp);
+
+  Assert.WillNotRaise(
+    procedure
+    begin
+      DecimalRound(High(Int64) * 2.2);
+    end,
+    EInvalidOp);
+
+  Assert.WillNotRaise(
+    procedure
+    begin
+      DecimalRound(Low(Int64) * 2.2);
+    end,
+    EInvalidOp);
+
+  Assert.WillNotRaise(
+    procedure
+    begin
+      DecimalRound(High(Int64) * Pi);
+    end,
+    EInvalidOp);
+
+  Assert.WillNotRaise(
+    procedure
+    begin
+      DecimalRound(Low(Int64) * Pi);
+    end,
+    EInvalidOp);
+
+  Assert.WillNotRaise(
+    procedure
+    begin
+      DecimalRound(NaN);
+    end,
+    EInvalidOp);
+
+  Assert.WillNotRaise(
+    procedure
+    begin
+      DecimalRound(Infinity);
+    end,
+    EInvalidOp);
+
+  Assert.WillNotRaise(
+    procedure
+    begin
+      DecimalRound(NegInfinity);
+    end,
+    EInvalidOp);
 end;
 
 procedure TDecimalRoundTests.NegativeDecimals_RoundsToTens;
