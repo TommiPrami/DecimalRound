@@ -102,7 +102,7 @@ begin
     the place value used to extract one decimal digit per iteration. }
   LIndex := NUMBER_OF_BITS_TO_CLEAR - 2 - LExponent;
 
-  if LIndex > 64 - 4 then
+  if LIndex > (64 - 4) then
     RaiseNumberTooSmallException;
 
   LDivisor := 1;
