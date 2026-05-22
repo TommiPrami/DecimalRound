@@ -58,18 +58,22 @@ var
 begin
   { Compute for Single: }
   LFactor := 1.00;
+
   repeat
     LFactor := LFactor / 2.00;
     LSingleTest := 1.00 + LFactor / 2.00;
   until LSingleTest = 1.00;
+
   ASingleEpsilon := LFactor;
 
   { Compute for Double: }
   LFactor := 1.00;
+
   repeat
     LFactor := LFactor / 2.00;
     LDoubleTest := 1.00 + LFactor / 2.00;
   until LDoubleTest = 1.00;
+
   ADoubleEpsilon := LFactor;
 
   { Compute for Extended: }
@@ -88,16 +92,14 @@ var
 begin
   { NaN: exponent bits all-ones AND mantissa non-zero.
     Infinity also has exponent all-ones but its mantissa is zero. }
-  Result := ((LBits and SINGLE_EXPONENT_BITS) = SINGLE_EXPONENT_BITS)
-        and ((LBits and SINGLE_MANTISSA_BITS) <> 0);
+  Result := ((LBits and SINGLE_EXPONENT_BITS) = SINGLE_EXPONENT_BITS) and ((LBits and SINGLE_MANTISSA_BITS) <> 0);
 end;
 
 function IsNan(const ADoubleValue: Double): Boolean;
 var
   LBits: Int64 absolute ADoubleValue;
 begin
-  Result := ((LBits and DOUBLE_EXPONENT_BITS) = DOUBLE_EXPONENT_BITS)
-        and ((LBits and DOUBLE_MANTISSA_BITS) <> 0);
+  Result := ((LBits and DOUBLE_EXPONENT_BITS) = DOUBLE_EXPONENT_BITS) and ((LBits and DOUBLE_MANTISSA_BITS) <> 0);
 end;
 
 {$IFDEF SUPPORTS_TRUE_EXTENDED}
@@ -109,7 +111,7 @@ begin
     Infinity = exponent all-ones AND significand = $8000000000000000.
     NaN     = exponent all-ones AND the lower 63 bits of the significand non-zero. }
   Result := ((LBits.Exponent and EXTENDED_EXPONENT_BITS) = EXTENDED_EXPONENT_BITS)
-        and ((LBits.Significand and EXTENDED_SIGNIFICAND_NON_LEADING_BITS) <> 0);
+    and ((LBits.Significand and EXTENDED_SIGNIFICAND_NON_LEADING_BITS) <> 0);
 end;
 {$ENDIF}
 
@@ -117,9 +119,10 @@ procedure LoadDecimalRoundingCtrlAbbrs(const AStrings: TStrings; const AAddAbbre
 var
   LRoundingControl: TDecimalRoundingControl;
 begin
-  Assert(AStrings <> nil);
+  Assert(Assigned(AStrings));
 
   AStrings.Clear;
+
   for LRoundingControl := Low(LRoundingControl) to High(LRoundingControl) do
     if AAddAbbreviation then
       AStrings.AddObject(ROUNDING_CONTROL_STRINGS[LRoundingControl].Abbreviation, Pointer(LRoundingControl))
@@ -206,8 +209,7 @@ begin
     gPowerOfTenMultipliers[I] := LMultiplier;
   end;
 
-  { Negative indices mirror positive ones — callers divide by the lookup
-    instead of multiplying when ANumberOfDecimals < 0. }
+  { Negative indices mirror positive ones — callers divide by the lookup instead of multiplying when ANumberOfDecimals < 0. }
   for I := Low(gPowerOfTenMultipliers) to -1 do
     gPowerOfTenMultipliers[I] := gPowerOfTenMultipliers[Abs(I)];
 end;
