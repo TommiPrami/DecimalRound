@@ -10,6 +10,19 @@
 
 ***************************************************************************** *)
 
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+// Deliberate bit-level manipulation of the IEEE significand of
+// Single / Double / Extended values. The significand is held in an Int64
+// field, but its high bit is set for any normalised value — meaning
+// ordinary signed arithmetic on it (Inc/Dec, +/- INC_DOUBLE etc.) would
+// trap EIntOverflow when the host project enables overflow checks.
+// Likewise, intermediate shift / multiply expressions in ExactFloatToStr
+// step through the full 64-bit range. The two switch directives above
+// force checks OFF for this unit regardless of the caller's settings.
+// Do NOT write compiler-directive literals inside { } comments here:
+// Delphi parses them as real directives even within a brace comment.
+
 interface
 
   function ExactFloatToStr(const AExtendedValue: Extended; const ASpaceInterval: Integer = 3): string;
