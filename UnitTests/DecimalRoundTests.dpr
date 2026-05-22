@@ -14,6 +14,12 @@ uses
   DUnitX.Loggers.Xml.NUnit,
   {$ENDIF }
   DUnitX.TestFramework,
+  DRUnit.Round in '..\Source\DRUnit.Round.pas',
+  DRUnit.RoundEx in '..\Source\DRUnit.RoundEx.pas',
+  DRUnit.Utils in '..\Source\DRUnit.Utils.pas',
+  DRUnit.Consts in '..\Source\DRUnit.Consts.pas',
+  DRUnit.Types in '..\Source\DRUnit.Types.pas',
+  DRUnit.ExactFloatUtils in '..\Source\DRUnit.ExactFloatUtils.pas',
   DRTests.IsNan in 'DRTests.IsNan.pas',
   DRTests.NextPrevFloat in 'DRTests.NextPrevFloat.pas',
   DRTests.DecimalRound in 'DRTests.DecimalRound.pas',
