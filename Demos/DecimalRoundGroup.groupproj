@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{AE3A4960-82BD-4C94-971D-2A2A1FFE4873}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="..\UnitTests\DecimalRoundTests.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="DecimalRoundDemo.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="DecimalRoundTests">
+        <MSBuild Projects="..\UnitTests\DecimalRoundTests.dproj"/>
+    </Target>
+    <Target Name="DecimalRoundTests:Clean">
+        <MSBuild Projects="..\UnitTests\DecimalRoundTests.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DecimalRoundTests:Make">
+        <MSBuild Projects="..\UnitTests\DecimalRoundTests.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DecimalRoundDemo">
+        <MSBuild Projects="DecimalRoundDemo.dproj"/>
+    </Target>
+    <Target Name="DecimalRoundDemo:Clean">
+        <MSBuild Projects="DecimalRoundDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DecimalRoundDemo:Make">
+        <MSBuild Projects="DecimalRoundDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="DecimalRoundTests;DecimalRoundDemo"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="DecimalRoundTests:Clean;DecimalRoundDemo:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="DecimalRoundTests:Make;DecimalRoundDemo:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

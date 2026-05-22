@@ -70,3 +70,4 @@ __recovery/
 # Boss dependency manager vendor folder https://github.com/HashLoad/boss
 modules/
 UnitTests/TestInsightSettings.ini
+UnitTests/Win32/Debug/TestInsightSettings.ini
