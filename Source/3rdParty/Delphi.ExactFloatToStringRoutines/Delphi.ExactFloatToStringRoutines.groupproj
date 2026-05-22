@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{3E15D346-2CA5-4B47-B0E8-A29361308F33}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="UnitTests\Delphi.ExactFloatToStringTests.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo\ExactFloatToStringDemo.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Delphi_ExactFloatToStringTests">
+        <MSBuild Projects="UnitTests\Delphi.ExactFloatToStringTests.dproj"/>
+    </Target>
+    <Target Name="Delphi_ExactFloatToStringTests:Clean">
+        <MSBuild Projects="UnitTests\Delphi.ExactFloatToStringTests.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Delphi_ExactFloatToStringTests:Make">
+        <MSBuild Projects="UnitTests\Delphi.ExactFloatToStringTests.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="ExactFloatToStringDemo">
+        <MSBuild Projects="Demo\ExactFloatToStringDemo.dproj"/>
+    </Target>
+    <Target Name="ExactFloatToStringDemo:Clean">
+        <MSBuild Projects="Demo\ExactFloatToStringDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ExactFloatToStringDemo:Make">
+        <MSBuild Projects="Demo\ExactFloatToStringDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Delphi_ExactFloatToStringTests;ExactFloatToStringDemo"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Delphi_ExactFloatToStringTests:Clean;ExactFloatToStringDemo:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Delphi_ExactFloatToStringTests:Make;ExactFloatToStringDemo:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
