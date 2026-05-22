@@ -103,7 +103,7 @@ begin
   Result := ((LBits and DOUBLE_EXPONENT_BITS) = DOUBLE_EXPONENT_BITS) and ((LBits and DOUBLE_MANTISSA_BITS) <> 0);
 end;
 
-{$IFDEF DEFINED(SUPPORTS_TRUE_EXTENDED)}
+{$IF DEFINED(SUPPORTS_TRUE_EXTENDED)}
 function IsNan(const AExtendedValue: Extended): Boolean;
 var
   LBits: TExtendedRec absolute AExtendedValue;
