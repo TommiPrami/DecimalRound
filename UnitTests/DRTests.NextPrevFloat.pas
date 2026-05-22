@@ -8,6 +8,8 @@
 
 interface
 
+{$INCLUDE ..\Source\DecimalRound.inc}
+
 uses
   DUnitX.TestFramework;
 
@@ -18,21 +20,21 @@ type
     // PrevFloat(0) sign contract
     [Test] procedure PrevFloat_Single_Of_Zero_Is_Negative;
     [Test] procedure PrevFloat_Double_Of_Zero_Is_Negative;
-{$IF DEFINED(CPUX86)}
+{$IF DEFINED(SUPPORTS_TRUE_EXTENDED)}
     [Test] procedure PrevFloat_Extended_Of_Zero_Is_Negative;
 {$ENDIF}
 
     // NextFloat(0) sign contract
     [Test] procedure NextFloat_Single_Of_Zero_Is_Positive;
     [Test] procedure NextFloat_Double_Of_Zero_Is_Positive;
-{$IF DEFINED(CPUX86)}
+{$IF DEFINED(SUPPORTS_TRUE_EXTENDED)}
     [Test] procedure NextFloat_Extended_Of_Zero_Is_Positive;
 {$ENDIF}
 
     // Inverse: Next(Prev(x)) = x
     [Test] procedure NextOfPrev_Single_Returns_Original;
     [Test] procedure NextOfPrev_Double_Returns_Original;
-{$IF DEFINED(CPUX86)}
+{$IF DEFINED(SUPPORTS_TRUE_EXTENDED)}
     [Test] procedure NextOfPrev_Extended_Returns_Original;
 {$ENDIF}
 
@@ -46,7 +48,7 @@ type
 implementation
 
 uses
-  System.SysUtils, System.Math, DRUnit.ExactFloatUtils;
+  System.SysUtils, System.Math, DRUnit.ExactFloatUtils, DRUnit.Consts;
 
 { ----------------------------------------------------------- PrevFloat(0) }
 
@@ -68,14 +70,14 @@ begin
   Assert.AreEqual<Double>(-MinDouble, LResult);
 end;
 
-{$IF DEFINED(CPUX86)}
+{$IF DEFINED(SUPPORTS_TRUE_EXTENDED)}
 procedure TNextPrevFloatTests.PrevFloat_Extended_Of_Zero_Is_Negative;
 var
   LResult: Extended;
 begin
   LResult := PrevFloat(Extended(0.0));
-  Assert.IsTrue(LResult < 0,
-    'PrevFloat(0: Extended) must be < 0 (regression: used to return +MinExtended)');
+
+  Assert.IsTrue(LResult < 0, 'PrevFloat(0: Extended) must be < 0 (regression: used to return +MinExtended)');
   Assert.AreEqual<Extended>(-MinExtended, LResult);
 end;
 {$ENDIF}
@@ -87,6 +89,7 @@ var
   LResult: Single;
 begin
   LResult := NextFloat(Single(0.0));
+
   Assert.IsTrue(LResult > 0, 'NextFloat(0: Single) must be > 0');
   Assert.AreEqual<Single>(MinSingle, LResult);
 end;
@@ -96,35 +99,36 @@ var
   LResult: Double;
 begin
   LResult := NextFloat(Double(0.0));
+
   Assert.IsTrue(LResult > 0, 'NextFloat(0: Double) must be > 0');
   Assert.AreEqual<Double>(MinDouble, LResult);
 end;
 
-{$IF DEFINED(CPUX86)}
+{$IF DEFINED(SUPPORTS_TRUE_EXTENDED)}
 procedure TNextPrevFloatTests.NextFloat_Extended_Of_Zero_Is_Positive;
 var
   LResult: Extended;
 begin
   LResult := NextFloat(Extended(0.0));
+
   Assert.IsTrue(LResult > 0, 'NextFloat(0: Extended) must be > 0');
   Assert.AreEqual<Extended>(MinExtended, LResult);
 end;
 {$ENDIF}
 
-{ ----------------------------------------------------- Inverse round-trip }
+{ Inverse round-trip }
 
 procedure TNextPrevFloatTests.NextOfPrev_Single_Returns_Original;
 const
   CSamples: array [0..3] of Single = (1.0, -1.0, 12345.678, -0.0001);
 var
-  I: Integer;
+  LIndex: Integer;
   LValue: Single;
 begin
-  for I := Low(CSamples) to High(CSamples) do
+  for LIndex := Low(CSamples) to High(CSamples) do
   begin
-    LValue := CSamples[I];
-    Assert.AreEqual<Single>(LValue, NextFloat(PrevFloat(LValue)),
-      Format('Round-trip failed for %g', [LValue]));
+    LValue := CSamples[LIndex];
+    Assert.AreEqual(LValue, NextFloat(PrevFloat(LValue)), EPSILON_SINGLE, Format('Round-trip failed for %g', [LValue]));
   end;
 end;
 
@@ -132,35 +136,33 @@ procedure TNextPrevFloatTests.NextOfPrev_Double_Returns_Original;
 const
   CSamples: array [0..3] of Double = (1.0, -1.0, 12345.6789012345, -0.000001);
 var
-  I: Integer;
+  LIndex: Integer;
   LValue: Double;
 begin
-  for I := Low(CSamples) to High(CSamples) do
+  for LIndex := Low(CSamples) to High(CSamples) do
   begin
-    LValue := CSamples[I];
-    Assert.AreEqual<Double>(LValue, NextFloat(PrevFloat(LValue)),
-      Format('Round-trip failed for %g', [LValue]));
+    LValue := CSamples[LIndex];
+    Assert.AreEqual(LValue, NextFloat(PrevFloat(LValue)), EPSILON_DOUBLE, Format('Round-trip failed for %g', [LValue]));
   end;
 end;
 
-{$IF DEFINED(CPUX86)}
+{$IF DEFINED(SUPPORTS_TRUE_EXTENDED)}
 procedure TNextPrevFloatTests.NextOfPrev_Extended_Returns_Original;
 const
   CSamples: array [0..3] of Extended = (1.0, -1.0, 12345.6789012345, -0.000001);
 var
-  I: Integer;
+  LIndex: Integer;
   LValue: Extended;
 begin
-  for I := Low(CSamples) to High(CSamples) do
+  for LIndex := Low(CSamples) to High(CSamples) do
   begin
-    LValue := CSamples[I];
-    Assert.AreEqual<Extended>(LValue, NextFloat(PrevFloat(LValue)),
-      Format('Round-trip failed for %g', [LValue]));
+    LValue := CSamples[LIndex];
+    Assert.AreEqual(LValue, NextFloat(PrevFloat(LValue)), EPSILON_EXTENDED, Format('Round-trip failed for %g', [LValue]));
   end;
 end;
 {$ENDIF}
 
-{ ------------------------------------------------------------- Ordering }
+{ Ordering }
 
 procedure TNextPrevFloatTests.NextFloat_Single_Returns_Strictly_Greater;
 begin

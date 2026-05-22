@@ -48,12 +48,9 @@ type
 implementation
 
 uses
-  System.Math, DRUnit.Types, DRUnit.RoundEx;
+  System.Math, DRUnit.Consts, DRUnit.Types, DRUnit.RoundEx;
 
-const
-  EPSILON: Double = 2.2204460493E-16;
-
-{ ------------------------------------------------------------------- HalfUp }
+{  HalfUp }
 
 procedure TDecimalRoundExModeTests.HalfUp_Positive_Tie_GoesAwayFromZero;
 begin
@@ -66,7 +63,7 @@ begin
   Assert.AreEqual<Extended>(-2.25, DecimalRoundEx(Double(-2.245), 2, drcHalfUp));
 end;
 
-{ ----------------------------------------------------------------- HalfDown }
+{ HalfDown }
 
 procedure TDecimalRoundExModeTests.HalfDown_Positive_Tie_GoesTowardZero;
 begin
@@ -78,7 +75,7 @@ begin
   Assert.AreEqual<Extended>(-0.5, DecimalRoundEx(Double(-0.55), 1, drcHalfDown));
 end;
 
-{ ----------------------------------------------------------------- HalfEven }
+{ HalfEven }
 
 procedure TDecimalRoundExModeTests.HalfEven_TieAtEven_StaysEven;
 begin
@@ -94,7 +91,7 @@ begin
   Assert.AreEqual<Extended>(4.0, DecimalRoundEx(Double(3.5), 0, drcHalfEven));
 end;
 
-{ -------------------------------------------------------- HalfPos / HalfNeg }
+{ HalfPos / HalfNeg }
 
 procedure TDecimalRoundExModeTests.HalfPos_Positive_Tie_GoesUp;
 begin
@@ -116,7 +113,7 @@ begin
   Assert.AreEqual<Extended>(-0.6, DecimalRoundEx(Double(-0.55), 1, drcHalfNeg));
 end;
 
-{ ----------------------------------------------------------- Directed modes }
+{ Directed modes }
 
 procedure TDecimalRoundExModeTests.RndPos_Ceil;
 begin
@@ -142,13 +139,13 @@ begin
   Assert.AreEqual<Extended>(-1.3, DecimalRoundEx(Double(-1.21), 1, drcRndUp));
 end;
 
-{ ----------------------------------------------- Early-exit / drcNone path }
+{ Early-exit / drcNone path }
 
 {$IFDEF DEBUG}
 procedure TDecimalRoundExEarlyExitTests.NoneMode_ReturnsValueUnchanged;
 { The drcNone branch is only present when DO_CHECKS is enabled (Debug). }
 begin
-  Assert.AreEqual(1.234567, DecimalRoundEx(Double(1.234567), 2, drcNone), EPSILON, '');
+  Assert.AreEqual(1.234567, DecimalRoundEx(Double(1.234567), 2, drcNone), EPSILON_DOUBLE, '');
 end;
 {$ENDIF}
 
