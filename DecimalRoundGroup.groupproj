@@ -3,10 +3,10 @@
         <ProjectGuid>{AE3A4960-82BD-4C94-971D-2A2A1FFE4873}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="..\UnitTests\DecimalRoundTests.dproj">
+        <Projects Include="UnitTests\DecimalRoundTests.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="DecimalRoundDemo.dproj">
+        <Projects Include="Demos\DecimalRoundDemo.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -18,22 +18,22 @@
         </BorlandProject>
     </ProjectExtensions>
     <Target Name="DecimalRoundTests">
-        <MSBuild Projects="..\UnitTests\DecimalRoundTests.dproj"/>
+        <MSBuild Projects="UnitTests\DecimalRoundTests.dproj"/>
     </Target>
     <Target Name="DecimalRoundTests:Clean">
-        <MSBuild Projects="..\UnitTests\DecimalRoundTests.dproj" Targets="Clean"/>
+        <MSBuild Projects="UnitTests\DecimalRoundTests.dproj" Targets="Clean"/>
     </Target>
     <Target Name="DecimalRoundTests:Make">
-        <MSBuild Projects="..\UnitTests\DecimalRoundTests.dproj" Targets="Make"/>
+        <MSBuild Projects="UnitTests\DecimalRoundTests.dproj" Targets="Make"/>
     </Target>
     <Target Name="DecimalRoundDemo">
-        <MSBuild Projects="DecimalRoundDemo.dproj"/>
+        <MSBuild Projects="Demos\DecimalRoundDemo.dproj"/>
     </Target>
     <Target Name="DecimalRoundDemo:Clean">
-        <MSBuild Projects="DecimalRoundDemo.dproj" Targets="Clean"/>
+        <MSBuild Projects="Demos\DecimalRoundDemo.dproj" Targets="Clean"/>
     </Target>
     <Target Name="DecimalRoundDemo:Make">
-        <MSBuild Projects="DecimalRoundDemo.dproj" Targets="Make"/>
+        <MSBuild Projects="Demos\DecimalRoundDemo.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
         <CallTarget Targets="DecimalRoundTests;DecimalRoundDemo"/>
