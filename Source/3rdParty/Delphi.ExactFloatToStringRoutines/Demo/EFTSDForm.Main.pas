@@ -106,7 +106,7 @@ begin
 
   Screen.Cursor := crHourGlass;
   try
-    AScenario();
+    AScenario;
   finally
     Screen.Cursor := crDefault;
   end;
