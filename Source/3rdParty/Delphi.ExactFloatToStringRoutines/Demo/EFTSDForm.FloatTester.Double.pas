@@ -97,7 +97,7 @@ begin
   Log('');
 
   // Start at 2 * smallest_normal (exp=2, fraction=0). Value = 2^-1021.
-  // Halve four times to cross into denormal range, then double back up.
+  // Halve four times to cross into denormal range, then double backup.
   LDoubleRec.AsInt64 := $0020000000000000;
 
   for LIndex := 1 to 9 do

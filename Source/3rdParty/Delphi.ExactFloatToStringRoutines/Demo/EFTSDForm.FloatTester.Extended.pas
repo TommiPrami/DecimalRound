@@ -87,7 +87,7 @@ begin
   Log('');
 
   // Start at 2 * smallest_normal (exp=2, integer-bit-only mantissa = $8000...000).
-  // Halve four times to cross into denormal range, then double back up.
+  // Halve four times to cross into denormal range, then double backup.
   LExtendedRec.Exponent := 2;
   LExtendedRec.Mantissa := $8000000000000000;
 
