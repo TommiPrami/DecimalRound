@@ -6,11 +6,7 @@ type
   TX87RoundingControl = (rcBankers, rcFloor, rcCeil, rcChop);
   TX87PrecisionControl = (pcSingle, pcReserved, pcDouble, pcExtended);
   TX87InterruptBit = (ibI, ibD, ibZ, ibO, ibU, ibP, ib6, ib7);
-  TX87InterruptBits = set of tX87InterruptBit;
-
-  TB10 = array [0..9] of Byte;
-  TB8 = array [0..7] of Byte;
-  TB4 = array [0..3] of Byte;
+  TX87InterruptBits = set of TX87InterruptBit;
 
   TExtendedRec = packed record
     Significand: Int64;

@@ -1,7 +1,9 @@
 ﻿unit DRTests.DecimalRoundEx;
 
-{ Coverage for DecimalRoundEx — one fixture per rounding mode plus an
-  early-exit fixture for drcNone / NaN handling. }
+{$INCLUDE ..\Source\DecimalRound.inc}
+
+{ Coverage for DecimalRoundEx — one fixture per rounding mode plus a
+  special-values fixture for drcNone / NaN / Infinity / huge magnitudes. }
 
 interface
 
@@ -38,10 +40,19 @@ type
   end;
 
   [TestFixture]
-  TDecimalRoundExEarlyExitTests = class
+  TDecimalRoundExSpecialValueTests = class
+  { drcNone / NaN / Infinity / overflow-magnitude handling. These behaviors
+    must hold in BOTH Debug and Release builds — an earlier version only
+    honored drcNone and the NaN check when compiled with DEBUG, so in
+    Release drcNone silently bankers-rounded the value instead. }
   public
-{$IFDEF DEBUG}
     [Test] procedure NoneMode_ReturnsValueUnchanged;
+    [Test] procedure NoneMode_NegativeDecimals_ReturnsValueUnchanged;
+    [Test] procedure NaN_ReturnsNaN_InEveryMode;
+    [Test] procedure Infinity_ReturnedUnchanged_InEveryMode;
+    [Test] procedure HugeValue_ReturnedUnchanged_InEveryMode;
+{$IFDEF SUPPORTS_TRUE_EXTENDED}
+    [Test] procedure ExtendedOverload_ModesWork;
 {$ENDIF}
   end;
 
@@ -139,18 +150,96 @@ begin
   Assert.AreEqual<Extended>(-1.3, DecimalRoundEx(Double(-1.21), 1, drcRndUp));
 end;
 
-{ Early-exit / drcNone path }
+{ Special values: drcNone / NaN / Infinity / huge magnitudes }
 
-{$IFDEF DEBUG}
-procedure TDecimalRoundExEarlyExitTests.NoneMode_ReturnsValueUnchanged;
-{ The drcNone branch is only present when DO_CHECKS is enabled (Debug). }
+procedure TDecimalRoundExSpecialValueTests.NoneMode_ReturnsValueUnchanged;
+var
+  V: Double;
 begin
-  Assert.AreEqual(1.234567, DecimalRoundEx(Double(1.234567), 2, drcNone), EPSILON_DOUBLE, '');
+  V := 1.234567;
+  Assert.AreEqual<Extended>(V, DecimalRoundEx(V, 2, drcNone), 'drcNone must not round');
+
+  V := -987.6543;
+  Assert.AreEqual<Extended>(V, DecimalRoundEx(V, 0, drcNone), 'drcNone must not round negatives');
+end;
+
+procedure TDecimalRoundExSpecialValueTests.NoneMode_NegativeDecimals_ReturnsValueUnchanged;
+var
+  V: Double;
+begin
+  V := 1234.5;
+  Assert.AreEqual<Extended>(V, DecimalRoundEx(V, -2, drcNone), 'drcNone must not round with negative decimal count');
+end;
+
+procedure TDecimalRoundExSpecialValueTests.NaN_ReturnsNaN_InEveryMode;
+var
+  V: Double;
+  LMode: TDecimalRoundingControl;
+begin
+  V := NaN;
+
+  for LMode := Low(TDecimalRoundingControl) to High(TDecimalRoundingControl) do
+    Assert.IsTrue(System.Math.IsNan(DecimalRoundEx(V, 2, LMode)),
+      'NaN in must give NaN out for mode ' + ROUNDING_CONTROL_STRINGS[LMode].Abbreviation);
+end;
+
+procedure TDecimalRoundExSpecialValueTests.Infinity_ReturnedUnchanged_InEveryMode;
+var
+  V: Double;
+  LMode: TDecimalRoundingControl;
+begin
+  for LMode := Low(TDecimalRoundingControl) to High(TDecimalRoundingControl) do
+  begin
+    V := Infinity;
+    Assert.AreEqual<Extended>(V, DecimalRoundEx(V, 2, LMode),
+      '+Infinity, mode ' + ROUNDING_CONTROL_STRINGS[LMode].Abbreviation);
+
+    V := NegInfinity;
+    Assert.AreEqual<Extended>(V, DecimalRoundEx(V, 2, LMode),
+      '-Infinity, mode ' + ROUNDING_CONTROL_STRINGS[LMode].Abbreviation);
+  end;
+end;
+
+procedure TDecimalRoundExSpecialValueTests.HugeValue_ReturnedUnchanged_InEveryMode;
+var
+  V: Double;
+  LMode: TDecimalRoundingControl;
+begin
+  { 1E19 * 10^2 = 1E21 overflows the internal Int64 conversion; every mode
+    must fall back to returning the input unchanged, with the sign intact. }
+  for LMode := Low(TDecimalRoundingControl) to High(TDecimalRoundingControl) do
+  begin
+    V := 1E19;
+    Assert.AreEqual<Extended>(V, DecimalRoundEx(V, 2, LMode),
+      '1E19, mode ' + ROUNDING_CONTROL_STRINGS[LMode].Abbreviation);
+
+    V := -1E19;
+    Assert.AreEqual<Extended>(V, DecimalRoundEx(V, 2, LMode),
+      '-1E19, mode ' + ROUNDING_CONTROL_STRINGS[LMode].Abbreviation);
+  end;
+end;
+
+{$IFDEF SUPPORTS_TRUE_EXTENDED}
+procedure TDecimalRoundExSpecialValueTests.ExtendedOverload_ModesWork;
+var
+  V: Extended;
+begin
+  V := 2.245;
+  Assert.AreEqual<Extended>(2.25, DecimalRoundEx(V, 2, drcHalfUp), 'Extended 2.245 HalfUp');
+  Assert.AreEqual<Extended>(2.24, DecimalRoundEx(V, 2, drcHalfDown), 'Extended 2.245 HalfDown');
+  Assert.AreEqual<Extended>(2.24, DecimalRoundEx(V, 2, drcHalfEven), 'Extended 2.245 HalfEven (224 is even)');
+
+  V := -2.245;
+  Assert.AreEqual<Extended>(-2.25, DecimalRoundEx(V, 2, drcHalfUp), 'Extended -2.245 HalfUp');
+
+  V := 1.21;
+  Assert.AreEqual<Extended>(1.3, DecimalRoundEx(V, 1, drcRndPos), 'Extended 1.21 ceil');
+  Assert.AreEqual<Extended>(1.2, DecimalRoundEx(V, 1, drcRndDown), 'Extended 1.21 trunc');
 end;
 {$ENDIF}
 
 initialization
   TDUnitX.RegisterTestFixture(TDecimalRoundExModeTests);
-  TDUnitX.RegisterTestFixture(TDecimalRoundExEarlyExitTests);
+  TDUnitX.RegisterTestFixture(TDecimalRoundExSpecialValueTests);
 
 end.

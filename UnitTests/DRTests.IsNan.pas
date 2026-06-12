@@ -1,5 +1,7 @@
 ﻿unit DRTests.IsNan;
 
+{$INCLUDE ..\Source\DecimalRound.inc}
+
 { Regression coverage for DRUnit.Utils.IsNan.
 
   The earlier implementation classified +/-Infinity as NaN because it only
@@ -36,7 +38,7 @@ type
     [Test] procedure Double_MinValue_IsNotNan;
 
     // Extended (only built when SUPPORTS_TRUE_EXTENDED, i.e. CPUX86)
-{$IF DEFINED(CPUX86)}
+{$IFDEF SUPPORTS_TRUE_EXTENDED}
     [Test] procedure Extended_NaN_IsNan;
     [Test] procedure Extended_PositiveInfinity_IsNotNan;
     [Test] procedure Extended_NegativeInfinity_IsNotNan;
@@ -157,7 +159,7 @@ begin
 end;
 
 { ---------------------------------------------------------------- Extended }
-{$IF DEFINED(CPUX86)}
+{$IFDEF SUPPORTS_TRUE_EXTENDED}
 
 procedure TIsNanTests.Extended_NaN_IsNan;
 var

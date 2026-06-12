@@ -175,7 +175,7 @@ begin
   FFormatSettings.DecimalSeparator := '.';
 
   EmptyLog;
-  Log(X87CWToString(GetX87CW));
+  Log(FpuSettingsToString);
   Log('');
 end;
 

@@ -9,7 +9,7 @@
         <AppType>Console</AppType>
         <FrameworkType>None</FrameworkType>
         <ProjectVersion>20.4</ProjectVersion>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <Platform Condition="'$(Platform)'==''">Win64</Platform>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -95,6 +95,7 @@
         <DCCReference Include="..\Source\DRUnit.Round.pas"/>
         <DCCReference Include="..\Source\DRUnit.RoundEx.pas"/>
         <DCCReference Include="..\Source\DRUnit.Utils.pas"/>
+        <DCCReference Include="..\Source\DRUnit.UiUtils.pas"/>
         <DCCReference Include="..\Source\DRUnit.Consts.pas"/>
         <DCCReference Include="..\Source\DRUnit.Types.pas"/>
         <DCCReference Include="DRTests.IsNan.pas"/>
@@ -102,6 +103,7 @@
         <DCCReference Include="DRTests.DecimalRoundEx.pas"/>
         <DCCReference Include="DRTests.DecimalRoundAutoCases.pas"/>
         <DCCReference Include="DRTests.Sanity.pas"/>
+        <DCCReference Include="DRTests.UiUtils.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

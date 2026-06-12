@@ -35,15 +35,38 @@ type
     [Test] procedure Tricky_1_015_Times_100_Rounds_To_101_5;
     [Test] procedure Tricky_3_015_Times_100_Rounds_To_301_5;
     [Test] procedure Tricky_Negative_2_245_Rounds_To_Minus_2_25;
-    //
-    [Test] procedure LargeValues_ManualTests;
+  end;
+
+  [TestFixture]
+  TDecimalRoundSpecialValues = class
+  { NaN, ±Infinity and values whose scaled magnitude would overflow the
+    internal Int64 conversion (|AValue * 10^ANumberOfDecimals| >=
+    MAX_SAFE_SCALED_VALUE).
+
+    Contract: NaN in -> NaN out; everything else that is too large to carry
+    decimal fractions at the requested precision comes back UNCHANGED —
+    never an exception and never the silently sign-flipped garbage that an
+    overflowing Round() produces when floating point exceptions are masked
+    (the Delphi 12+ default). Must hold in Debug and Release, Win32 and
+    Win64. }
+  public
+    [Test] procedure NaN_ReturnsNaN;
+    [Test] procedure Infinity_ReturnedUnchanged;
+    [Test] procedure HugeValues_ReturnedUnchanged;
+    [Test] procedure HugeValues_NegativeDecimals_ReturnedUnchanged;
+    [Test] procedure ScaledMagnitudeAtThreshold_ReturnedUnchanged;
+    [Test] procedure SingleOverload_SpecialValues;
+{$IFDEF SUPPORTS_TRUE_EXTENDED}
+    [Test] procedure ExtendedOverload_SpecialValues;
+{$ENDIF}
   end;
 
   [TestFixture]
   TDecimalRoundTrickyCases = class
   { Real-world inputs that have tripped our previous rounding routine
     and/or Delphi's RTL rounding (Round / SimpleRoundTo). All assertions
-    use a zero tolerance — these must be exact. }
+    use at most an EPSILON_DOUBLE / EPSILON_EXTENDED tolerance — the
+    results must match to the last representable digit. }
   public
     // ----- Double overload -----
     [Test] procedure Multiplications_By_0_045_Double;
@@ -101,72 +124,6 @@ begin
   Assert.AreEqual(3.0, DecimalRound(Double(2.6), 0), EPSILON_DOUBLE);
 end;
 
-procedure TDecimalRoundTests.LargeValues_ManualTests;
-begin
-  Assert.WillNotRaise(
-    procedure
-    begin
-      DecimalRound(High(Int64) * 1.1);
-    end,
-    EInvalidOp);
-
-  Assert.WillNotRaise(
-    procedure
-    begin
-      DecimalRound(Low(Int64) * 1.1);
-    end,
-    EInvalidOp);
-
-  Assert.WillNotRaise(
-    procedure
-    begin
-      DecimalRound(High(Int64) * 2.2);
-    end,
-    EInvalidOp);
-
-  Assert.WillNotRaise(
-    procedure
-    begin
-      DecimalRound(Low(Int64) * 2.2);
-    end,
-    EInvalidOp);
-
-  Assert.WillNotRaise(
-    procedure
-    begin
-      DecimalRound(High(Int64) * Pi);
-    end,
-    EInvalidOp);
-
-  Assert.WillNotRaise(
-    procedure
-    begin
-      DecimalRound(Low(Int64) * Pi);
-    end,
-    EInvalidOp);
-
-  Assert.WillNotRaise(
-    procedure
-    begin
-      DecimalRound(NaN);
-    end,
-    EInvalidOp);
-
-  Assert.WillNotRaise(
-    procedure
-    begin
-      DecimalRound(Infinity);
-    end,
-    EInvalidOp);
-
-  Assert.WillNotRaise(
-    procedure
-    begin
-      DecimalRound(NegInfinity);
-    end,
-    EInvalidOp);
-end;
-
 procedure TDecimalRoundTests.NegativeDecimals_RoundsToTens;
 begin
   { ANumberOfDecimals = -1 means round to nearest 10. }
@@ -197,6 +154,122 @@ procedure TDecimalRoundTests.Tricky_Negative_2_245_Rounds_To_Minus_2_25;
 begin
   Assert.AreEqual(-2.25, DecimalRound(Double(-2.245), 2), EPSILON_DOUBLE);
 end;
+
+{ ------------------------------------- NaN / Infinity / huge magnitudes }
+
+procedure TDecimalRoundSpecialValues.NaN_ReturnsNaN;
+var
+  V: Double;
+begin
+  V := NaN;
+
+  Assert.IsTrue(System.Math.IsNan(DecimalRound(V)), 'DecimalRound(NaN) must return NaN');
+  Assert.IsTrue(System.Math.IsNan(DecimalRound(V, 0)), 'DecimalRound(NaN, 0) must return NaN');
+  Assert.IsTrue(System.Math.IsNan(DecimalRound(V, -2)), 'DecimalRound(NaN, -2) must return NaN');
+end;
+
+procedure TDecimalRoundSpecialValues.Infinity_ReturnedUnchanged;
+var
+  V: Double;
+begin
+  V := Infinity;
+  Assert.AreEqual<Extended>(V, DecimalRound(V), '+Infinity must pass through unchanged');
+
+  V := NegInfinity;
+  Assert.AreEqual<Extended>(V, DecimalRound(V), '-Infinity must pass through unchanged');
+end;
+
+procedure TDecimalRoundSpecialValues.HugeValues_ReturnedUnchanged;
+var
+  V: Double;
+begin
+  { Before the overflow guard, High(Int64) * 1.1 (about +1.01E19) came back
+    as roughly -9.2E16 — Round() overflowed the Int64 conversion and yielded
+    Low(Int64) without raising. These must all be exact identities now. }
+  V := High(Int64) * 1.1;
+  Assert.AreEqual<Extended>(V, DecimalRound(V), 'High(Int64) * 1.1');
+
+  V := Low(Int64) * 1.1;
+  Assert.AreEqual<Extended>(V, DecimalRound(V), 'Low(Int64) * 1.1');
+
+  V := High(Int64) * 2.2;
+  Assert.AreEqual<Extended>(V, DecimalRound(V), 'High(Int64) * 2.2');
+
+  V := High(Int64) * Pi;
+  Assert.AreEqual<Extended>(V, DecimalRound(V), 'High(Int64) * Pi');
+
+  V := 1E30;
+  Assert.AreEqual<Extended>(V, DecimalRound(V), '1E30');
+
+  V := -1E30;
+  Assert.AreEqual<Extended>(V, DecimalRound(V), '-1E30');
+
+  V := MaxDouble;
+  Assert.AreEqual<Extended>(V, DecimalRound(V), 'MaxDouble');
+
+  V := -MaxDouble;
+  Assert.AreEqual<Extended>(V, DecimalRound(V), '-MaxDouble');
+end;
+
+procedure TDecimalRoundSpecialValues.HugeValues_NegativeDecimals_ReturnedUnchanged;
+var
+  V: Double;
+begin
+  { With negative decimal counts the value is scaled DOWN, so the guard only
+    triggers at correspondingly larger magnitudes. }
+  V := 1E21;
+  Assert.AreEqual<Extended>(V, DecimalRound(V, -1), '1E21 to -1 dp');
+
+  V := -1E22;
+  Assert.AreEqual<Extended>(V, DecimalRound(V, -2), '-1E22 to -2 dp');
+end;
+
+procedure TDecimalRoundSpecialValues.ScaledMagnitudeAtThreshold_ReturnedUnchanged;
+var
+  V: Double;
+begin
+  { 9E16 * 10^2 = 9E18 = MAX_SAFE_SCALED_VALUE exactly. The guard is >=, so
+    this input must come back unchanged on every platform. (9E16 and 9E18 are
+    both exactly representable, so the comparison is deterministic.) }
+  V := 9E16;
+  Assert.AreEqual<Extended>(V, DecimalRound(V), 'scaled value exactly at MAX_SAFE_SCALED_VALUE');
+end;
+
+procedure TDecimalRoundSpecialValues.SingleOverload_SpecialValues;
+var
+  V: Single;
+begin
+  V := NaN;
+  Assert.IsTrue(System.Math.IsNan(DecimalRound(V)), 'Single NaN must return NaN');
+
+  V := Infinity;
+  Assert.AreEqual<Extended>(V, DecimalRound(V), 'Single +Infinity');
+
+  V := NegInfinity;
+  Assert.AreEqual<Extended>(V, DecimalRound(V), 'Single -Infinity');
+
+  V := MaxSingle;
+  Assert.AreEqual<Extended>(V, DecimalRound(V), 'MaxSingle');
+end;
+
+{$IFDEF SUPPORTS_TRUE_EXTENDED}
+procedure TDecimalRoundSpecialValues.ExtendedOverload_SpecialValues;
+var
+  V: Extended;
+begin
+  V := NaN;
+  Assert.IsTrue(System.Math.IsNan(DecimalRound(V)), 'Extended NaN must return NaN');
+
+  V := Infinity;
+  Assert.AreEqual<Extended>(V, DecimalRound(V), 'Extended +Infinity');
+
+  V := 1.5E19;
+  Assert.AreEqual<Extended>(V, DecimalRound(V), '1.5E19');
+
+  V := -2E20;
+  Assert.AreEqual<Extended>(V, DecimalRound(V, 0), '-2E20 to 0 dp');
+end;
+{$ENDIF}
 
 { --------------------------------------------- Tricky real-world cases }
 
@@ -515,6 +588,7 @@ end;
 
 initialization
   TDUnitX.RegisterTestFixture(TDecimalRoundTests);
+  TDUnitX.RegisterTestFixture(TDecimalRoundSpecialValues);
   TDUnitX.RegisterTestFixture(TDecimalRoundTrickyCases);
 
 end.

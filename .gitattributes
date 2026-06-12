@@ -1,0 +1,36 @@
+# Line-ending policy for this repository.
+#
+# Text files are stored in the repository with LF and normalized on commit
+# (the index already holds LF for all tracked text files). Delphi tooling
+# expects Windows line endings, so Delphi source and project files are always
+# checked out with CRLF, regardless of each contributor's core.autocrlf.
+
+# Sensible default for anything not matched explicitly below
+* text=auto
+
+# Delphi / Pascal source and project files — always CRLF in the working tree
+*.pas       text eol=crlf
+*.inc       text eol=crlf
+*.dpr       text eol=crlf
+*.dpk       text eol=crlf
+*.dfm       text eol=crlf
+*.dproj     text eol=crlf
+*.groupproj text eol=crlf
+*.rc        text eol=crlf
+
+# Plain text / docs — normalized, platform-default endings on checkout
+*.md           text
+*.txt          text
+LICENSE        text
+.gitignore     text
+.gitattributes text
+
+# Binaries — exempt from any line-ending handling
+*.res  binary
+*.ico  binary
+*.icns binary
+*.png  binary
+*.bmp  binary
+*.exe  binary
+*.dll  binary
+*.zip  binary

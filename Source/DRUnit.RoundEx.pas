@@ -8,7 +8,16 @@ uses
   DRUnit.Types;
 
   { The following functions have a two times "epsilon" error built in for the Single, Double and Extended argument
-    respectively }
+    respectively.
+
+    Special values (all build configurations):
+      - NaN in -> NaN out (the input NaN is returned as is).
+      - ARoundingControl = drcNone returns the value unchanged.
+      - ±Infinity, and values whose scaled magnitude (AValue * 10^N) would
+        overflow the internal Int64 conversion, are returned unchanged. At
+        such magnitudes the value carries no decimal fraction information at
+        the requested precision, so the input is already its own best
+        rounding (see MAX_SAFE_SCALED_VALUE in DRUnit.Consts). }
   function DecimalRoundEx(const AValue: Single; const ANumberOfDecimals: Integer;
     const ARoundingControl: TDecimalRoundingControl = drcHalfUp): Extended; overload;
   function DecimalRoundEx(const AValue: Double; const ANumberOfDecimals: Integer;
@@ -21,7 +30,7 @@ uses
 implementation
 
 uses
-  System.Math, DRUnit.Consts, DRUnit.Utils;
+  DRUnit.Consts, DRUnit.Utils;
 
 { The following DecimalRound function is for doing the best possible job of
   rounding floating binary point numbers to the specified NDFD.  MaxRelError
@@ -38,6 +47,9 @@ uses
   array lookup. An Assert guards Debug builds; in Release the caller is
   expected to pass a value within [-ROUND_FLOAT_MAX_DECIMAL_COUNT..
   +ROUND_FLOAT_MAX_DECIMAL_COUNT].
+
+  NOTE: NaN must be filtered out by the caller (the public wrappers do this);
+  everything else, including ±Infinity, is safe to pass in.
 }
 function InternalDecimalRoundEx(const AValue: Extended; const ANumberOfDecimals: Integer; const AMaxRelativeError: Double;
   const ARoundingControl: TDecimalRoundingControl = drcHalfUp): Extended;
@@ -53,20 +65,29 @@ begin
   Assert((ANumberOfDecimals >= Low(gPowerOfTenMultipliers)) and (ANumberOfDecimals <= High(gPowerOfTenMultipliers)),
     'ANumberOfDecimals out of range for gPowerOfTenMultipliers lookup.');
   Assert(IsFpuCwOkForRounding,
-    'FPU control word is not configured for bankers rounding / Extended precision — DecimalRoundEx results will be off.');
+    'FPU is not configured for round-to-nearest-even — DecimalRoundEx results will be off.');
+
+  if ARoundingControl = drcNone then
+    Exit(AValue);
 
   LMultiplier := gPowerOfTenMultipliers[ANumberOfDecimals];
 
   if ANumberOfDecimals >= 0 then
-  begin
-    LScaledValue := AValue * LMultiplier;
-    LScaledError := Abs(AMaxRelativeError * AValue) * LMultiplier;
-  end
+    LScaledValue := AValue * LMultiplier
   else
-  begin
     LScaledValue := AValue / LMultiplier;
+
+  { Too large for the Int64 conversion below (covers ±Infinity as well). At
+    this magnitude the rounding granule is below one ulp of the input, so the
+    value is already its own best rounding — return it unchanged instead of
+    letting Round() overflow into garbage. }
+  if Abs(LScaledValue) >= MAX_SAFE_SCALED_VALUE then
+    Exit(AValue);
+
+  if ANumberOfDecimals >= 0 then
+    LScaledError := Abs(AMaxRelativeError * AValue) * LMultiplier
+  else
     LScaledError := Abs(AMaxRelativeError * AValue) / LMultiplier;
-  end;
 
   { Do the different basic types separately: }
   case ARoundingControl of
@@ -118,12 +139,8 @@ end;
 function DecimalRoundEx(const AValue: Single; const ANumberOfDecimals: Integer;
   const ARoundingControl: TDecimalRoundingControl = drcHalfUp): Extended;
 begin
-{$IFDEF DO_CHECKS}
   if DRUnit.Utils.IsNan(AValue) then
-    Exit(NaN)
-  else if ARoundingControl = drcNone then
     Exit(AValue);
-{$ENDIF}
 
   Result := InternalDecimalRoundEx(AValue, ANumberOfDecimals, MAXIMUM_RELATIVE_ERROR_SINGLE, ARoundingControl);
 end;
@@ -131,12 +148,8 @@ end;
 function DecimalRoundEx(const AValue: Double; const ANumberOfDecimals: Integer;
   const ARoundingControl: TDecimalRoundingControl = drcHalfUp): Extended;
 begin
-{$IFDEF DO_CHECKS}
   if DRUnit.Utils.IsNan(AValue) then
-    Exit(NaN)
-  else if ARoundingControl = drcNone then
     Exit(AValue);
-{$ENDIF}
 
   Result := InternalDecimalRoundEx(AValue, ANumberOfDecimals, MAXIMUM_RELATIVE_ERROR_DOUBLE, ARoundingControl);
 end;
@@ -145,12 +158,8 @@ end;
 function DecimalRoundEx(const AValue: Extended; const ANumberOfDecimals: Integer;
   const ARoundingControl: TDecimalRoundingControl = drcHalfUp): Extended;
 begin
-{$IFDEF DO_CHECKS}
   if DRUnit.Utils.IsNan(AValue) then
-    Exit(NaN)
-  else  if ARoundingControl = drcNone then
     Exit(AValue);
-{$ENDIF}
 
   Result := InternalDecimalRoundEx(AValue, ANumberOfDecimals, MAXIMUM_RELATIVE_ERROR_EXTENDED, ARoundingControl);
 end;

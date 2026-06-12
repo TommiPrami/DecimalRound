@@ -25,29 +25,26 @@ const
   MAXIMUM_RELATIVE_ERROR_DOUBLE = EPSILON_DOUBLE * KNOWN_ERROR_LIMIT * SAFETY_FACTOR;
   MAXIMUM_RELATIVE_ERROR_EXTENDED = EPSILON_EXTENDED * KNOWN_ERROR_LIMIT * SAFETY_FACTOR;
 
-  { These FPU Control Word bit masks prevent interrupt when present: }
-  IM = $0001; {Invalid op interrupt Mask}
-  DM = $0002; {Denormalized op interrupt Mask}
-  ZM = $0004; {Zero divide interrupt Mask}
-  OM = $0008; {Overflow interrupt Mask}
-  UM = $0010; {Underflow interrupt Mask}
-  PM = $0020; {Loss of precision interrupt Mask}
-  { The "pending interrupt" flags in status word have matching positions. }
-  IntrM = IM or DM or ZM or OM or UM or PM;
-  { These FPU Control Word bit fields change operation: }
+  { x87 FPU Control Word bit fields, used when interpreting the CW for
+    diagnostics on Win32/x86. The low byte holds the exception mask bits in
+    TX87InterruptBit order (IM, DM, ZM, OM, UM, PM). On Win64 floating point
+    runs on SSE and is governed by the MXCSR register instead — see
+    DRUnit.Utils.IsFpuCwOkForRounding / FpuSettingsToString. }
   PC = $0300; {Precision Control mask}
   RC = $0C00; {Rounding Control mask}
 
-  PC_SINGLE = $0000;
-  PC_DOUBLE = $0200;
-  PC_EXTENDED = $0300;
-
-  RC_BANKERS = $0000;
-  RC_FLOOR = $0400;
-  RC_CEIL = $0800;
-  RC_CHOP = $0C00;
-
   ROUND_FLOAT_MAX_DECIMAL_COUNT = 19;
+
+  { Upper bound for the magnitude of the scaled value (AValue * 10^N) that the
+    rounding routines will pass to Round(). Kept safely below 2^63
+    (= 9.2233720368547758E18) so that adding the error allowance or the
+    half-unit offsets can never overflow the Int64 conversion. An overflowing
+    Round() does NOT reliably raise: with floating point exceptions masked
+    (the Delphi 12+ default) it silently yields the "indefinite integer"
+    Low(Int64) — i.e. sign-flipped garbage. A value at or beyond this limit
+    carries no decimal fraction information at the requested precision, so
+    the rounding routines return such inputs (including ±Infinity) unchanged. }
+  MAX_SAFE_SCALED_VALUE = 9.0E18;
 
   SINGLE_EXPONENT_BITS: LongInt = $7F800000; { 8 bits}
   DOUBLE_EXPONENT_BITS: Int64 = $7FF0000000000000; {11 bits}
@@ -80,41 +77,10 @@ const
       (Abbreviation: 'RndUp'   ; Description: 'Round away from zero.')
     );
 
-(* CW Mask bits prevent interrupt when true:
-   (Pending interrupt flags in status word have matching positions.) )
-    $0001 -- IM (Invalid op interrupt Mask)
-    $0002 -- DM (Denormalized op interrupt Mask)
-    $0004 -- ZM (Zero divide interrupt Mask)
-    $0008 -- OM (Overflow interrupt Mask)
-    $0010 -- UM (Underflow interrupt Mask)
-    $0020 -- PM (Loss of precision interrupt Mask) }
-{ CW Control bits change operation:
-    $0300 -- PC (Precision Control mask)
-    $0C00 -- RC (Rounding Control mask)
-    $1000 -- IC (Infinity Control mask) *)
-
-const {define long names}
-  ibInValidOperation = ibI;
-  ibDenormalizedOperand = ibD;
-  ibZeroDivide = ibZ;
-  ibOverflow = ibO;
-  ibUnderflow = ibU;
-  ibPrecision = ibP;
-
+  { Strings for interpreting the x87 control word in diagnostics output. }
   X87_ROUNDING_CONTROL_STRINGS: array [TX87RoundingControl] of string = ('bankers', 'floor', 'ceil', 'chop');
   PRECISION_CONTROL_STRINGS: array [TX87PrecisionControl] of string = ('single', 'reserved', 'double', 'extended');
   INTERRUPT_MASK_STRINGS: array [TX87InterruptBit] of string = ('IM', 'DM', 'ZM', 'OM', 'UM', 'PM', 'm6', 'm7');
-  INTERRUPT_STATUS_STRINGS: array [TX87InterruptBit] of string = ('IE', 'DE', 'ZE', 'OE', 'UE', 'PE', 'e6', 'e7');
-
-  DIGITS: array [0..9] of Char = '0123456789';
-
-  NUMBER_OF_BITS_TO_CLEAR = 8;
-  { Low 56 bits set; equivalent to ($FFFFFFFFFFFFFFFF shr NUMBER_OF_BITS_TO_CLEAR)
-    but expressed as a literal so the value is obvious at a glance. }
-  MASK: Int64 = $00FFFFFFFFFFFFFF;
-
-  INC_DOUBLE = $1000;
-  INC_SINGLE = $10000000000;
 
 implementation
 

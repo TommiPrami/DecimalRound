@@ -13,10 +13,11 @@ type
   [TestFixture]
   TSanityTests = class
   public
-    [Test] procedure FpuControlWord_IsOkForRounding;
+    [Test] procedure Fpu_IsOkForRounding;
     [Test] procedure PowerOfTenLookup_HasExpectedPositiveValues;
     [Test] procedure PowerOfTenLookup_NegativeIndicesMirrorPositive;
     [Test] procedure PowerOfTenLookup_ZeroIsOne;
+    [Test] procedure PowerOfTenLookup_TopIndexIs1E19;
   end;
 
 implementation
@@ -24,12 +25,13 @@ implementation
 uses
   System.SysUtils, DRUnit.Consts, DRUnit.Utils;
 
-procedure TSanityTests.FpuControlWord_IsOkForRounding;
+procedure TSanityTests.Fpu_IsOkForRounding;
 begin
+  { On Win32 this reflects the x87 control word; on Win64 the SSE MXCSR
+    register — both via IsFpuCwOkForRounding. }
   Assert.IsTrue(IsFpuCwOkForRounding,
-    'FPU control word is not configured for bankers rounding / Extended precision. '
-    + 'DecimalRound results will be off. Current CW: '
-    + Format('$%4.4x', [GetX87CW]));
+    'Floating point unit is not configured for round-to-nearest-even at the precision DecimalRound assumes. '
+    + 'Results will be off. Current state: ' + FpuSettingsToString);
 end;
 
 procedure TSanityTests.PowerOfTenLookup_HasExpectedPositiveValues;
@@ -53,6 +55,15 @@ end;
 procedure TSanityTests.PowerOfTenLookup_ZeroIsOne;
 begin
   Assert.AreEqual<Extended>(1.0, gPowerOfTenMultipliers[0]);
+end;
+
+procedure TSanityTests.PowerOfTenLookup_TopIndexIs1E19;
+begin
+  { 10^19 is exactly representable in both Double and Extended, so the
+    iteratively built table must hit it exactly. }
+  Assert.AreEqual(ROUND_FLOAT_MAX_DECIMAL_COUNT, High(gPowerOfTenMultipliers));
+  Assert.AreEqual(-ROUND_FLOAT_MAX_DECIMAL_COUNT, Low(gPowerOfTenMultipliers));
+  Assert.AreEqual<Extended>(1E19, gPowerOfTenMultipliers[ROUND_FLOAT_MAX_DECIMAL_COUNT]);
 end;
 
 initialization

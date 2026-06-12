@@ -5,7 +5,7 @@ interface
 {$INCLUDE DecimalRound.inc}
 
 uses
-  System.Classes, DRUnit.Consts;
+  DRUnit.Consts;
 
   { This procedure was used to compute the Epsilon values }
   procedure CalcEpsValues(var ASingleEpsilon, ADoubleEpsilon, AExtendedEpsilon: Double);
@@ -19,23 +19,31 @@ uses
   function IsNan(const AExtendedValue: Extended): Boolean; overload; inline;
 {$ENDIF}
 
-  { Returns the FPU control word (which indicates interrupt masks and precision and rounding modes). }
+{$IF DEFINED(CPUX86)}
+  { Returns the x87 FPU control word (which indicates interrupt masks and
+    precision and rounding modes). x86/Win32 only: on Win64 floating point
+    runs on SSE and is governed by the MXCSR register, which the x87 control
+    word does not reflect — use FpuSettingsToString there instead. }
   function GetX87CW: Word;
 
-  { Interprets X87 control word and returns as a string. }
+  { Interprets x87 control word and returns as a string. }
   function X87CWToString(const AControlWord: Word): string;
+{$ENDIF}
 
-  { Returns true if floating point processor (FPU) is correctly set
-    (1) to allow conversion from Extended to Double and Double to Single
-        without creating the the loss-of-precision interrupt or exception,
-    (2) to do arithmetic internal to FPU in Extended precision, and
-    (3) to internally use halves-to-even (a.k.a. bankers) rounding. }
+  { Cross-platform, human-readable summary of the floating point control
+    state that matters for these rounding routines: rounding mode, precision
+    mode (x86 only) and the masked-exception set. }
+  function FpuSettingsToString: string;
+
+  { Returns true if the floating point unit is configured the way the
+    rounding routines assume:
+      (1) round-to-nearest-even (a.k.a. bankers) rounding mode,
+      (2) the loss-of-precision exception masked (so conversions from
+          Extended to Double and Double to Single cannot trap), and
+      (3) on x86 only: internal arithmetic done in Extended precision.
+    On Win32 this reflects the x87 control word; on Win64 the SSE MXCSR
+    register (both read via System.Math.GetRoundMode / GetExceptionMask). }
   function IsFpuCwOkForRounding: Boolean;
-
-  { This procedure loads the TDecimalRoundingControl descriptions and ordinals
-    into the string list for such use as using a TCombobox to make rounding
-    type selection. }
-  procedure LoadDecimalRoundingCtrlAbbrs(const AStrings: TStrings; const AAddAbbreviation: Boolean = True);
 
 var
   { Lookup of 10^N. Indexed by decimal-count; negative indices mirror the
@@ -45,7 +53,7 @@ var
 implementation
 
 uses
-  System.SysUtils, DRUnit.Types;
+  System.Math, System.SysUtils, DRUnit.Types;
 
 { Compute smallest 1/(2^n) epsilon values for which "1 + epsilon <> 1".
   For "1 - epsilon <> 1", divide these computed values by 2. }
@@ -116,22 +124,9 @@ begin
 end;
 {$ENDIF}
 
-procedure LoadDecimalRoundingCtrlAbbrs(const AStrings: TStrings; const AAddAbbreviation: Boolean = True);
-var
-  LRoundingControl: TDecimalRoundingControl;
-begin
-  Assert(Assigned(AStrings));
+{$IF DEFINED(CPUX86)}
 
-  AStrings.Clear;
-
-  for LRoundingControl := Low(LRoundingControl) to High(LRoundingControl) do
-    if AAddAbbreviation then
-      AStrings.AddObject(ROUNDING_CONTROL_STRINGS[LRoundingControl].Abbreviation, Pointer(LRoundingControl))
-    else
-      AStrings.AddObject(ROUNDING_CONTROL_STRINGS[LRoundingControl].Description, Pointer(LRoundingControl));
-end;
-
-{ Returns the FPU control word (which indicates interrupt masks and precision and rounding modes). }
+{ Returns the x87 FPU control word (which indicates interrupt masks and precision and rounding modes). }
 function GetX87CW: Word;
 asm
   FStCW [Result]
@@ -140,22 +135,22 @@ end;
 { PickX87PrecisionCtrl picks FPU precision control out of CW.}
 function PickX87PrecisionCtrl(const AControlWord: Word): TX87PrecisionControl;
 begin
-  Result := TX87PrecisionControl((AControlWord and $0300) shr 8);
+  Result := TX87PrecisionControl((AControlWord and PC) shr 8);
 end;
 
 { PickX87RoundingCtrl picks FPU rounding control out of CW.}
 function PickX87RoundingCtrl(const AControlWord: Word): TX87RoundingControl;
 begin
-  Result := TX87RoundingControl((AControlWord and $0C00) shr 10);
+  Result := TX87RoundingControl((AControlWord and RC) shr 10);
 end;
 
-{ PickX87InterruptMask picks FPU interrupt mask bits out of CW.}
+{ PickX87InterruptMask picks FPU interrupt mask bits out of CW (the low byte). }
 function PickX87InterruptMask(const AControlWord: Word): TX87InterruptBits;
 begin
-  Result := TX87InterruptBits(Byte(AControlWord and $00FF));
+  Result := TX87InterruptBits(Byte(AControlWord));
 end;
 
-{ Interprets X87 control word and returns as a string. }
+{ Interprets x87 control word and returns as a string. }
 function X87CWToString(const AControlWord: Word): string;
 var
   LRoundingControl: TX87RoundingControl;
@@ -181,24 +176,63 @@ begin
     + '; ExceptionMasks=[' + Result + '] $' + IntToHex(AControlWord, 4);
 end;
 
-{ Checks to see that floating point processor (FPU) is correctly set to
+{$ENDIF}
 
-    (1) allow conversion from Extended to Double and Double to Single
-        without creating the the loss of precision interrupt or exception,
-    (2) do arithmetic internal to FPU in Extended precision, and
-    (3) use round halves-to-even (a.k.a. bankers rounding) internally. }
-function IsFpuCwOkForRounding: Boolean;
+{ GetPrecisionMode / TFPUPrecisionMode are x87-specific by nature; their use
+  here is intentionally limited to CPUX86 blocks. }
+{$WARN SYMBOL_PLATFORM OFF}
+
+function FpuSettingsToString: string;
+const
+  ROUNDING_MODE_STRINGS: array [TRoundingMode] of string =
+    ('nearest (bankers)', 'down (floor)', 'up (ceil)', 'truncate (chop)');
+{$IF DEFINED(CPUX86)}
+  PRECISION_MODE_STRINGS: array [TFPUPrecisionMode] of string =
+    ('single', 'reserved', 'double', 'extended');
+{$ENDIF}
+  MASKED_EXCEPTION_STRINGS: array [TArithmeticException] of string =
+    ('IM', 'DM', 'ZM', 'OM', 'UM', 'PM');
 var
-  LControlWord: Word;
+  LExceptionMask: TArithmeticExceptionMask;
+  LException: TArithmeticException;
+  LMaskedExceptions: string;
 begin
-  LControlWord := GetX87CW;
+  LExceptionMask := GetExceptionMask;
+  LMaskedExceptions := '';
 
-{$IF DEFINED(SUPPORTS_TRUE_EXTENDED)}
-  Result := ((LControlWord and (PC or RC or PM)) = (RC_BANKERS or PC_EXTENDED or PM));
-{$ELSE}
-  Result := ((LControlWord and (PC or RC or PM)) = (RC_BANKERS or PC_DOUBLE or PM));
+  for LException := Low(TArithmeticException) to High(TArithmeticException) do
+    if LException in LExceptionMask then
+    begin
+      if LMaskedExceptions <> '' then
+        LMaskedExceptions := LMaskedExceptions + ',';
+
+      LMaskedExceptions := LMaskedExceptions + MASKED_EXCEPTION_STRINGS[LException];
+    end;
+
+  Result := 'FPU Rounding=' + ROUNDING_MODE_STRINGS[GetRoundMode]
+{$IF DEFINED(CPUX86)}
+    + '; Precision=' + PRECISION_MODE_STRINGS[GetPrecisionMode]
+{$ENDIF}
+    + '; MaskedExceptions=[' + LMaskedExceptions + ']';
+
+{$IF DEFINED(CPUX86)}
+  Result := Result + ' ($' + IntToHex(GetX87CW, 4) + ')';
 {$ENDIF}
 end;
+
+{ Checks that the floating point unit is set up the way the rounding
+  routines assume — see the interface comment. Reads the x87 control word
+  on Win32 and the SSE MXCSR register on Win64, via System.Math. }
+function IsFpuCwOkForRounding: Boolean;
+begin
+  Result := (GetRoundMode = rmNearest) and (exPrecision in GetExceptionMask);
+
+{$IF DEFINED(CPUX86)}
+  Result := Result and (GetPrecisionMode = pmExtended);
+{$ENDIF}
+end;
+
+{$WARN SYMBOL_PLATFORM ON}
 
 procedure InitializePowerOfTenMultipliers;
 var
