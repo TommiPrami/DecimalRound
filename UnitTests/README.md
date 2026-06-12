@@ -1,34 +1,38 @@
-﻿# DecimalRound — Unit Tests (DUnitX)
+# DecimalRound — Unit Tests (DUnitX)
 
-DUnitX-based test project for the DecimalRound library.
+DUnitX-based test project for the DecimalRound library. Targets **Win32 and Win64**; the suite passes in both Debug and Release configurations.
 
 ## Files
 
 | File | Contents |
 | --- | --- |
-| `DecimalRoundTests.dpr` | Console DUnitX runner (also TestInsight-friendly via `TESTINSIGHT` define) |
+| `DecimalRoundTests.dpr` / `.dproj` | Console DUnitX runner (also TestInsight-friendly via the `TESTINSIGHT` define) |
 | `DRTests.IsNan.pas` | Regression coverage for the IsNan / Infinity classification bug |
-| `DRTests.NextPrevFloat.pas` | Regression coverage for `NextSmallerFloat(Extended) = 0` returning the wrong sign |
-| `DRTests.DecimalRound.pas` | Main `DecimalRound` (HalfUp) tests + slot for private trip-up cases (`TDecimalRoundTrickyCases`) |
-| `DRTests.DecimalRoundEx.pas` | Per-mode tests for `DecimalRoundEx` (HalfUp / HalfDown / HalfEven / HalfPos / HalfNeg / RndPos / RndNeg / RndDown / RndUp) |
-| `DRTests.Sanity.pas` | FPU control word + `gPowerOfTenMultipliers` lookup sanity |
+| `DRTests.DecimalRound.pas` | Main `DecimalRound` (HalfUp) tests, special values (NaN / ±Infinity / huge magnitudes) + slot for private trip-up cases (`TDecimalRoundTrickyCases`) |
+| `DRTests.DecimalRoundEx.pas` | Per-mode tests for `DecimalRoundEx` (HalfUp / HalfDown / HalfEven / HalfPos / HalfNeg / RndPos / RndNeg / RndDown / RndUp), plus drcNone / NaN / Infinity / overflow handling in every mode |
+| `DRTests.DecimalRoundAutoCases.pas` | Data-driven regression sweep (one named test per input/expected pair) |
+| `DRTests.Sanity.pas` | FPU configuration + `gPowerOfTenMultipliers` lookup sanity |
+| `DRTests.UiUtils.pas` | Coverage for the `LoadDecimalRoundingCtrlAbbrs` combobox helper |
 
-## First-time setup
+Tests that exercise the 80-bit `Extended` overloads are compiled only where `Extended` really is 80 bits (`SUPPORTS_TRUE_EXTENDED`, i.e. Win32/x86) — on Win64 the suite simply contains fewer tests; everything else is identical.
 
-A `.dproj` is intentionally **not** checked in — they are Delphi-version-specific XML and tend to churn. Generate one in the IDE:
+## Running in the IDE
 
-1. In Delphi, **File → Open** the `DecimalRoundTests.dpr` here.
-2. The IDE will create a matching `.dproj`. Save Project.
-3. Add the library source folder to the project's **Search Path**:
-   `..\Source`
-4. Make sure DUnitX is installed (it ships with modern Delphi; otherwise add it via GetIt or a `dunitx.*` package).
-5. Build and run.
+The project defines `TESTINSIGHT` (in the Base config), so pressing Run reports into the [TestInsight](https://bitbucket.org/sglienke/testinsight/wiki/Home) viewer if it is installed. Remove the define from Project Options to use the console runner instead.
 
-The runner uses `TDUnitXConsoleLogger` for console output and `TDUnitXXMLNUnitFileLogger` for an NUnit XML report (CI-friendly).
+## Running from the command line / CI
 
-## TestInsight
+Override the defines so the console runner (and no trailing `Readln`) is compiled in — MSBuild command-line properties take precedence over the ones in the `.dproj`:
 
-Define `TESTINSIGHT` in project options to run inside the TestInsight viewer instead of the console runner.
+```bat
+call "%ProgramFiles(x86)%\Embarcadero\Studio\37.0\bin\rsvars.bat"
+msbuild UnitTests\DecimalRoundTests.dproj /t:Rebuild /p:Config=Release /p:Platform=Win32 /p:DCC_Define=CI
+UnitTests\Win32\Release\DecimalRoundTests.exe
+msbuild UnitTests\DecimalRoundTests.dproj /t:Rebuild /p:Config=Release /p:Platform=Win64 /p:DCC_Define=CI
+UnitTests\Win64\Release\DecimalRoundTests.exe
+```
+
+The runner uses `TDUnitXConsoleLogger` for console output and `TDUnitXXMLNUnitFileLogger` for an NUnit XML report (CI-friendly), and sets `System.ExitCode` on any failure.
 
 ## Adding private "tripped Delphi RTL" cases
 
@@ -43,8 +47,3 @@ end;
 ```
 
 One `[Test]` method per scenario — when one fails, you instantly see which input is the culprit.
-
-## CI note
-
-Defining `CI` skips the trailing `Readln` so the runner exits unattended.
-The runner sets `System.ExitCode := EXIT_ERRORS` on any failure.

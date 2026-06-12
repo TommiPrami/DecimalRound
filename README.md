@@ -30,18 +30,30 @@ Original code credit: John Herbster (DecimalRounding_JH1.pas).
 
 The original code has been refactored and formatted to adhere to more standard coding conventions, with some minor modifications. The most significant change is the adjustment of the default rounding mode to **drcHalfUp**. 
 
-> DesimalRound(2.245) ~ 2.25. 
+> DecimalRound(2.245) ~ 2.25. 
 
-If you wish to use this as a drop in replacement of the Delphi round method, make own wrapper using the DecicalRoundEx().
+If you wish to use this as a drop in replacement of the Delphi round method, make own wrapper using the DecimalRoundEx().
 
-For a simple version, use DRUnit.Round. If you need more control, you can utilize the DRUnit.RoundEx unit.
+For a simple version, use DRUnit.Round. If you need more control, you can utilize the DRUnit.RoundEx unit. The `LoadDecimalRoundingCtrlAbbrs` helper (for filling a TComboBox with the rounding modes) lives in DRUnit.UiUtils, so the core rounding units do not depend on System.Classes.
+
+## Special values and limits
+
+These hold in **all** build configurations (Debug and Release) and on both Win32 and Win64:
+
+- **NaN in → NaN out.** The input NaN is returned as is.
+- **±Infinity is returned unchanged.**
+- **drcNone returns the value unchanged** (no rounding, as the name says).
+- **Values too large to round are returned unchanged.** When `|AValue * 10^NumberOfDecimals|` reaches `MAX_SAFE_SCALED_VALUE` (9E18, just below 2^63), the internal Int64 conversion would overflow — and an overflowing `Round()` does not reliably raise; with floating point exceptions masked (the Delphi 12+ default) it silently yields sign-flipped garbage. At such magnitudes the value carries no decimal fraction information at the requested precision anyway, so returning it unchanged *is* the correct rounding.
+- **Significant digits are bounded by the input type.** Asking for more significant digits than a Double (~16) or Extended (~19) actually carries gives results that are only correct to within the documented relative error — that is inherent to binary floating point, not to these routines.
+
+On Win64 the compiler uses SSE instructions, so the rounding behavior is governed by the MXCSR register rather than the x87 control word; `IsFpuCwOkForRounding` (and the diagnostic `FpuSettingsToString`) check the register that is actually in effect on each platform.
 
 I have been using these original routines, as well as my own versions, in various projects, both current and previous work. So far, I have not encountered any issues to complain about. However, it's important to note that there are limits when dealing with floating-point numbers, which can lead to unexpected results if pushed to extremes. Despite that, other rounding methods I've encountered and used have failed in various scenarios. In contrast, these routines have proven to be more reliable IMHO.
 
 As far as I know, the original code was donated to the community without a license. To clarify the terms of use for anyone checking it out, I added a permissive MIT license. This license allows users to use the code quite freely and without restrictions.
 
 ## TODO:
-- Add good set of Unit Tests
+- ~~Add good set of Unit Tests~~ (Done — DUnitX suite under `UnitTests`, runs on Win32 and Win64, Debug and Release)
 - Some examples in the demo, that usually fail, and maybe compare to rounding algorithms usually suggested in the web. (Started and partially done)
 - (have not thought about this yet)
  
