@@ -26,7 +26,16 @@ uses
   DRTests.DecimalRoundEx in 'DRTests.DecimalRoundEx.pas',
   DRTests.DecimalRoundAutoCases in 'DRTests.DecimalRoundAutoCases.pas',
   DRTests.Sanity in 'DRTests.Sanity.pas',
-  DRTests.UiUtils in 'DRTests.UiUtils.pas';
+  DRTests.UiUtils in 'DRTests.UiUtils.pas',
+  DRTests.CalcHelpers in 'DRTests.CalcHelpers.pas',
+  DRTests.Calc.MultiplyTies in 'DRTests.Calc.MultiplyTies.pas',
+  DRTests.Calc.Times100 in 'DRTests.Calc.Times100.pas',
+  DRTests.Calc.Divide in 'DRTests.Calc.Divide.pas',
+  DRTests.Calc.Composite in 'DRTests.Calc.Composite.pas',
+  DRTests.Calc.AddSub in 'DRTests.Calc.AddSub.pas',
+  DRTests.Calc.Vat in 'DRTests.Calc.Vat.pas',
+  DRTests.Calc.Modes in 'DRTests.Calc.Modes.pas',
+  DRTests.Calc.MagnitudeSweep in 'DRTests.Calc.MagnitudeSweep.pas';
 
 {$IFNDEF TESTINSIGHT}
 var

@@ -9,7 +9,7 @@
         <AppType>Console</AppType>
         <FrameworkType>None</FrameworkType>
         <ProjectVersion>20.4</ProjectVersion>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -104,6 +104,15 @@
         <DCCReference Include="DRTests.DecimalRoundAutoCases.pas"/>
         <DCCReference Include="DRTests.Sanity.pas"/>
         <DCCReference Include="DRTests.UiUtils.pas"/>
+        <DCCReference Include="DRTests.CalcHelpers.pas"/>
+        <DCCReference Include="DRTests.Calc.MultiplyTies.pas"/>
+        <DCCReference Include="DRTests.Calc.Times100.pas"/>
+        <DCCReference Include="DRTests.Calc.Divide.pas"/>
+        <DCCReference Include="DRTests.Calc.Composite.pas"/>
+        <DCCReference Include="DRTests.Calc.AddSub.pas"/>
+        <DCCReference Include="DRTests.Calc.Vat.pas"/>
+        <DCCReference Include="DRTests.Calc.Modes.pas"/>
+        <DCCReference Include="DRTests.Calc.MagnitudeSweep.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
