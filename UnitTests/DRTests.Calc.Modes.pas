@@ -45,7 +45,7 @@ type
   [TestFixture]
   TCalcModesTie0315 = class
   public
-    [Test] procedure Mul_7_x_0_045_HalfEven;      // -> 0.32 (31 odd, even neighbour is 32)
+    [Test] procedure Mul_7_x_0_045_HalfEven;      // -> 0.32 (31 odd, even neighbor is 32)
     [Test] procedure Mul_7_x_0_045_HalfUp;        // -> 0.32
     [Test] procedure Mul_7_x_0_045_HalfDown;      // -> 0.31
     [Test] procedure Mul_7_x_0_045_HalfPos;       // -> 0.32
@@ -96,10 +96,10 @@ type
     [Test] procedure Div_Neg_5_By_2_HalfDown;     // -> -2
     [Test] procedure Div_Neg_5_By_2_HalfPos;      // -> -2 (toward positive)
     [Test] procedure Div_Neg_5_By_2_HalfNeg;      // -> -3 (toward negative)
-    [Test] procedure Div_3_By_2_HalfEven;         // 1.5 -> 2 (1 odd, even neighbour 2)
+    [Test] procedure Div_3_By_2_HalfEven;         // 1.5 -> 2 (1 odd, even neighbor 2)
     [Test] procedure Div_3_By_2_HalfUp;           // -> 2
     [Test] procedure Div_3_By_2_HalfDown;         // -> 1
-    [Test] procedure Div_7_By_2_HalfEven;         // 3.5 -> 4 (3 odd, even neighbour 4)
+    [Test] procedure Div_7_By_2_HalfEven;         // 3.5 -> 4 (3 odd, even neighbor 4)
     [Test] procedure Div_7_By_2_HalfDown;         // -> 3
   end;
 
